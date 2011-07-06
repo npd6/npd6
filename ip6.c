@@ -77,11 +77,13 @@ void processNS( unsigned char *msg,
     flog(LOG_DEBUG, "processNS: Target prefix configured is: %s", prefixaddr_str); 
 
     // Does it match our configured prefix that we're interested in?
-    if (! addr6match( targetaddr, &prefixaddr, 32) ){
+    if (! addr6match( targetaddr, &prefixaddr, 32) )
+    {
         flog(LOG_DEBUG, "processNS: target and prefix do not match. Ignoring NS");
         return;
     }
-    else {
+    else
+    {
         struct sockaddr_in6 sockaddr;
         unsigned char nabuff[MAX_PKT_BUFF];
         struct nd_neighbor_advert *nad;
@@ -160,9 +162,6 @@ void processNS( unsigned char *msg,
         
         flog(LOG_DEBUG, "processNS: PKTINFO building complete");
         }
-
-
-
         
         // Build the mhdr
         memset(&mhdr, 0, sizeof(mhdr) );
@@ -191,8 +190,10 @@ int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
 {
     int idx, bdx;
     
-    for (bdx=1,idx=0; bdx<=bits; bdx+=4, idx++) {
-        if ( a1->s6_addr[idx] != a2->s6_addr[idx]) {
+    for (bdx=1,idx=0; bdx<=bits; bdx+=4, idx++)
+    {
+        if ( a1->s6_addr[idx] != a2->s6_addr[idx])
+        {
             flog(LOG_DEBUG, "addr6match: match failed at bit position %d", bdx);
             return 0;
         }

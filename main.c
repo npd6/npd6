@@ -22,7 +22,8 @@
 #include "npd6.h"
 
 #ifdef HAVE_GETOPT_LONG
-char usage_str[] = {
+char usage_str[] =
+{
 "\n"
 "  -c, --config=PATH      Sets the config file.  Default is /etc/npd6.conf.\n"
 "  -d, --debug            Sets the debug level.\n"
@@ -31,7 +32,8 @@ char usage_str[] = {
 "  -v, --version          Print the version and quit.\n"
 };
 
-struct option prog_opt[] = {
+struct option prog_opt[] =
+{
     {"config", 1, 0, 'c'},
     {"debug", 0, 0, 'd'},
     {"help", 0, 0, 'h'},
@@ -96,13 +98,15 @@ int main(int argc, char *argv[])
     }
 
     /* Open the log and config*/
-    if (openLog(logfile) < 0) {
+    if (openLog(logfile) < 0)
+    {
         printf("Exiting. Cannot open log file.");
         exit (1);
     }
     flog(LOG_INFO, "*********************** npd6 *****************************");
     
-    if ( readConfig(configfile) ) {
+    if ( readConfig(configfile) )
+    {
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
     }
@@ -112,7 +116,8 @@ int main(int argc, char *argv[])
 
     /* Raw socket for receiving NSs */
     sockpkt = open_packet_socket();
-    if (sockpkt < 0) {
+    if (sockpkt < 0)
+    {
         flog(LOG_ERR, "open_packet_socket: failed. Exiting.");
         exit(1);
     }
@@ -120,7 +125,8 @@ int main(int argc, char *argv[])
 
     /* ICMPv6 socket for sending NAs */
     sockicmp = open_icmpv6_socket();
-    if (sockicmp < 0) {
+    if (sockicmp < 0)
+    {
         flog(LOG_ERR, "open_icmpv6_socket: failed. Exiting.");
         exit(1);
     }
@@ -155,20 +161,24 @@ void dispatcher(void)
     fds[1].events = 0;
     fds[1].revents = 0;
 
-    for (;;) {
+    for (;;)
+    {
         int timeout = 180000;
         int rc;
 
         rc = poll(fds, sizeof(fds)/sizeof(fds[0]), timeout);
 
         if (rc > 0) {
-            if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
                 flog(LOG_WARNING, "socket error on fds[0].fd");
             }
-            if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
                 flog(LOG_WARNING, "socket error on fds[1].fd");
             }
-            else if (fds[0].revents & POLLIN) {
+            else if (fds[0].revents & POLLIN)
+            {
                 // Main event handling is in here
                 unsigned int len;
                 struct sockaddr_in6 rcv_addr;
@@ -182,11 +192,13 @@ void dispatcher(void)
                 // Have processNS() do the rest of validation and work...
                 processNS(msg, len);
             }
-            else if ( rc == 0 ) {
+            else if ( rc == 0 )
+            {
                 // Timer fired?
                 // One day. If we implement timers.
             }
-            else if ( rc == -1 ) {
+            else if ( rc == -1 )
+            {
                 flog(LOG_ERR, "dispatcher: weird poll error: %s", strerror(errno));
             }
 

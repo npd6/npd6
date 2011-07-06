@@ -26,7 +26,8 @@ int open_packet_socket(void)
     int sock;
     int err;
 
-    static const struct sock_filter filter[] = {
+    static const struct sock_filter filter[] =
+    {
         BPF_STMT(BPF_LD|BPF_B|BPF_ABS,
             ETH_HLEN +
             sizeof(struct ip6_hdr) +
