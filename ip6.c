@@ -66,6 +66,7 @@ void processNS( unsigned char *msg,
     struct in6_addr             *srcaddr;
     struct in6_addr             *dstaddr;
     struct in6_addr             *targetaddr;
+    unsigned int                multicastNS;
     
     // For outgoing NA
     struct in6_addr             srcLinkAddr = IN6ADDR_ANY_INIT;
@@ -108,6 +109,15 @@ void processNS( unsigned char *msg,
     // Based upon the dstaddr, record if this was a unicast or multicast NS.
     // If unicast, we'll use that later when we decide whether to add the
     // target link-layer option to any outgoing NA.
+    if (1)
+    {
+        // This was a multicast NS
+        multicastNS = 1;
+    }else
+    {
+        // This was a unicast NS
+        multicastNS=0;
+    }
 
     // Within the NS, who are they looking for?
     targetaddr = (struct in6_addr *)&(ns->nd_ns_target);
@@ -146,21 +156,30 @@ void processNS( unsigned char *msg,
         nad->nd_na_flags_reserved |= ND_NA_FLAG_SOLICITED;
         memcpy(&(nad->nd_na_target), targetaddr, sizeof(struct in6_addr) );
 
-        // Per rfc, we must add dest link-addr option for NSs that came
-        // to the multicast group addr. And since we can optionally so
-        // so for unicast NSs anyway, we'll set it for all.
-        opthdr = (struct nd_opt_hdr *)&nabuff[sizeof(struct nd_neighbor_advert)] ;        
-        opthdr->nd_opt_type = ND_OPT_TARGET_LINKADDR;
-        opthdr->nd_opt_len = 1; // Units of 8-octets
-        optdata = (unsigned char *) (opthdr + 1);
+        if (multicastNS || naLinkOptFlag)
+        {
+            // Per rfc, we must add dest link-addr option for NSs that came
+            // to the multicast group addr. And do it anyway for all if the config
+            // option was set.
+            opthdr = (struct nd_opt_hdr *)&nabuff[sizeof(struct nd_neighbor_advert)] ;
+            opthdr->nd_opt_type = ND_OPT_TARGET_LINKADDR;
+            opthdr->nd_opt_len = 1; // Units of 8-octets
+            optdata = (unsigned char *) (opthdr + 1);
+            memcpy( optdata, linkAddr, 6);
 
-        memcpy( optdata, linkAddr, 6);
+            // Build the io vector
+            iovlen = sizeof(struct nd_neighbor_advert) + sizeof(struct nd_opt_hdr) + ETH_ALEN;
+            iov.iov_len = iovlen;
+            iov.iov_base = (caddr_t) nabuff;
+        } else
+        {
+            // The NS was unicast AND the config option was unset.
+            // Build the io vector
+            iovlen = sizeof(struct nd_neighbor_advert) + ETH_ALEN;
+            iov.iov_len = iovlen;
+            iov.iov_base = (caddr_t) nabuff;
+        }
         
-        // Build the io vector
-        iovlen = sizeof(struct nd_neighbor_advert) + sizeof(struct nd_opt_hdr) + ETH_ALEN;
-        iov.iov_len = iovlen;
-        iov.iov_base = (caddr_t) nabuff;
-
         // Build the cmsg
         memset(chdr, 0, sizeof(chdr) );
         cmsg = (struct cmsghdr *) chdr;

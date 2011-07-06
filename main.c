@@ -64,8 +64,9 @@ int main(int argc, char *argv[])
     logfile = NPD6_LOG;
     configfile = NPD6_CONF;
     strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
-    interfaceIdx=-1;
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
+    interfaceIdx=-1;
+    naLinkOptFlag = 1;
 
     pname = ((pname=strrchr(argv[0],'/')) != NULL)?pname+1:argv[0];
     paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];

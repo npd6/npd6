@@ -262,7 +262,7 @@ int prefixset(char *px)
 
 
 /*****************************************************************************
- * trimwhitespace
+ * stripwhitespace
  *  Tidy up lines of text from the config file.
  *
  * Inputs:
@@ -273,27 +273,28 @@ int prefixset(char *px)
  *  As input
  *
  * Return:
- *  Pointer to the string (redundant)
+ *  void
  */
-char *trimwhitespace(char *str)
+void stripwhitespace(char *str)
 {
-  char *end;
+    int i = 0;
+    char *ptr = str;
 
-  // Trim leading space
-  while(isspace(*str)) str++;
-
-  if(*str == 0)  // All spaces?
-    return str;
-
-  // Trim trailing space
-  end = str + strlen(str) - 1;
-  while(end > str && isspace(*end)) end--;
-
-  // Write new null terminator
-  *(end+1) = 0;
-
-  return str;
+    for(i = 0; i < strlen(str) || *ptr == '\0'; )
+    {
+        if( (*ptr == ' ') || (*ptr == '\n') )
+        {
+            strcpy(ptr, ptr + 1);
+            continue;
+        }
+        else
+        {
+            i++;
+            ptr++;
+        }
+    }
 }
+
 
 
 /*****************************************************************************

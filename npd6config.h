@@ -24,3 +24,6 @@
 #define NPD6INTERFACE   "interface"
 #define NPD6OPTFLAG     "linkOption"
 
+#define SET             "true"
+#define UNSET           "false"
+

@@ -42,16 +42,21 @@ int readConfig(char *configFileName)
         flog(LOG_ERR, "Can't open config file %s: %s", configFileName, strerror(errno));
         return (-1);
     }
-    // This is real dumb, noddy, u8nvalidated config parsing. We find a line begins with EITHER '//' OR
-    // NPD,,,,
-    // We act only on NPD... All else gets simply ignored.
+    
+    // This is real simple config file parsing...
     do {
         len = 0;
         if (fgets(linein, 128, configFileFD) == NULL)
             break;
         // Tidy it up
-        trimwhitespace(linein);
+        stripwhitespace(linein);
+        // Special mega-hacky thing for blank lines:
         len = strlen(linein);
+        if (len==0)
+        {
+            len=1;
+            continue;
+        }
         
         // Tokenize
         cp = strdupa(linein);
@@ -63,9 +68,9 @@ int readConfig(char *configFileName)
         }
 
         /**********************************
-        * NPDprefix
+        * prefix
         **********************************/
-        if ( strcmp(lefttoken, "NPDprefix")==0 ) {
+        if ( strcmp(lefttoken, NPD6PREFIX)==0 ) {
             strncpy( prefixaddrstr, righttoken, sizeof(prefixaddrstr));
             // We need to pad it up and record the length in bits
             prefixaddrlen = prefixset(prefixaddrstr);
@@ -74,9 +79,9 @@ int readConfig(char *configFileName)
             build_addr(prefixaddrstr, &prefixaddr);
         }
         /**********************************
-        * NPDinterface
+        * interface
         **********************************/ 
-        else if ( strcmp(lefttoken, "NPDinterface")==0 )
+        else if ( strcmp(lefttoken, NPD6INTERFACE)==0 )
         {
             if ( strlen( righttoken) > INTERFACE_STRLEN)
             {
@@ -87,6 +92,27 @@ int readConfig(char *configFileName)
             flog(LOG_DEBUG, "Supplied interface is %s", interfacestr);
         }
         /**********************************
+        * Link option flag
+        **********************************/
+        else if ( strcmp(lefttoken, NPD6OPTFLAG)==0 )
+        {
+            if ( !strcmp( righttoken, SET ) )
+            {
+                flog(LOG_DEBUG, "linkOption flag SET");
+                naLinkOptFlag = 1;
+            }
+            else if ( !strcmp( righttoken, UNSET ) )
+            {
+                flog(LOG_DEBUG, "linkOption flag UNSET");
+                naLinkOptFlag = 0;
+            }
+            else
+            {
+                flog(LOG_ERR, "linkOption flag - Bad value");
+                exit(1);
+            }
+        }
+         /**********************************
         * junk
         **********************************/
         else

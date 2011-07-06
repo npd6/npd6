@@ -80,6 +80,8 @@ char            prefixaddrstr[INET6_ADDRSTRLEN];
 struct          in6_addr prefixaddr;
 unsigned int    prefixaddrlen;
 
+// Key behaviour
+int             naLinkOptFlag;
 
 
 //*****************************************************************************
@@ -99,7 +101,7 @@ void    print_addr(struct in6_addr *, char *);
 void    print_addr16(const struct in6_addr * , char * );
 void    build_addr(char *, struct in6_addr *);
 int     prefixset(char *);
-char    *trimwhitespace(char *);
+void    stripwhitespace(char *);
 void    dumpHex(unsigned char *, unsigned int);
 int     getLinkaddress( char *, unsigned char *);
 void    showVersion(void);
