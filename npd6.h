@@ -86,29 +86,31 @@ unsigned int    prefixaddrlen;
 // Prototypes
 //
 // main.c
-void    showVersion(void);
-void    showUsage(void);
-int     readConfig(char *);
-int     openLog(char *);
 void    dispatcher(void);
+void    showUsage(void);
+
+// config.c
+int     readConfig(char *);
 
 // util.c
-int     npd6log(const char *function, int pri, char *format, ...);
-void    usersignal(int signal);
-void    print_addr(struct in6_addr *addr, char *str);
-void    print_addr16(const struct in6_addr * addr, char * str);
+int     npd6log(const char *, int , char *, ...);
+void    usersignal(int );
+void    print_addr(struct in6_addr *, char *);
+void    print_addr16(const struct in6_addr * , char * );
 void    build_addr(char *, struct in6_addr *);
 int     prefixset(char *);
 char    *trimwhitespace(char *);
 void    dumpHex(unsigned char *, unsigned int);
 int     getLinkaddress( char *, unsigned char *);
+void    showVersion(void);
+int     openLog(char *);
 
 // icmp6.c
 int     open_packet_socket(void);
 int     open_icmpv6_socket(void);
 int     get_rx(unsigned char *);
 
-// ip6,c
+// ip6.c
 void    processNS( unsigned char *, unsigned int);
 int     addr6match( struct in6_addr *, struct in6_addr *, int);
 

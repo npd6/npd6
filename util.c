@@ -369,3 +369,26 @@ int getLinkaddress( char * iface, unsigned char * link) {
 }
 
 
+//*******************************************************
+// Take the supplied filename and open it for logging use.
+// Upon return, logFileFD set unless we failed.
+int openLog(char *logFileName)
+{
+
+    if ((logFileFD = fopen(logFileName, "a")) == NULL)
+    {
+        fprintf(stderr, "Can't open %s: %s\n", logFileName, strerror(errno));
+        return (-1);
+    }
+
+    return 0;
+}
+
+
+//*******************************************************
+// Just display the version and return.
+void showVersion(void)
+{
+    printf("Version 0.1\n");
+}
+
