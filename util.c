@@ -23,6 +23,21 @@
 
 //*******************************************************
 // When we receive sigusrN, do something awesome.
+/*****************************************************************************
+ * usersignal
+ *      When dispatcher picks up a user signal, do something with it.
+ *
+ * Inputs:
+ *  int mysig
+ *      The signal received.
+ *
+ * Outputs:
+ *  None yet... placeholder
+ *
+ * Return:
+ *      void
+ *
+ */
 void usersignal(int mysig)
 {
     switch(mysig) {
@@ -44,6 +59,28 @@ void usersignal(int mysig)
 
 //*******************************************************
 // Log to the previously opened log file.
+/*****************************************************************************
+ * flog
+ *      Log as per level to the previously defined log file or system..
+ *
+ * Inputs:
+ *  int pri
+ *      Log level: e.g. LOG_ERR, LOG_INFO, LOG_DEBUG, etc.
+ *  char *format
+ *      Standard format string.
+ *  ...
+ *      Variable number of params to accompany the format string.
+ * GLOBAL
+ *  logFileFD
+ *      Previously opened lof device.
+ *
+ * Outputs:
+ *  Via fprintf to the log file.
+ * 
+ * Return:
+ *      0 on success
+ *
+ */
 int flog(int pri, char *format, ...)
 {
     time_t now;
@@ -71,8 +108,26 @@ int flog(int pri, char *format, ...)
     return 0;
 }
 
-//*******************************************************
-// Print ipv6 in (optionally) avbbreviated char form
+
+
+/*****************************************************************************
+ * print_addr
+ *      Convert ipv6 address to string representation.
+ *
+ * Inputs:
+ *  const struct in6_addr * addr
+ *      Binary ipv6 address
+ *
+ * Outputs:
+ *  char * str
+ *      String representation, *not* fully padded.
+ *
+ * Return:
+ *      void
+ *
+ * Notes:
+ *  Compare with print_addr16 - this version does not pad.
+ */
 void print_addr(struct in6_addr *addr, char *str)
 {
         const char *res;
@@ -87,8 +142,21 @@ void print_addr(struct in6_addr *addr, char *str)
 }
 
 
-//*******************************************************
-// Take ipv6 addr in char form and build a binary version
+/*****************************************************************************
+ * build_addr
+ *      Convert char represetation of ipv6 addr to binary form.
+ *
+ * Inputs:
+ *  char * str
+ *      String representation, fully padded.
+ *
+ * Outputs:
+ *  const struct in6_addr * addr
+ *      Binary ipv6 address
+ *
+ * Return:
+ *      void
+ */
 void build_addr(char *str, struct in6_addr *addr)
 {
     int ret;
@@ -102,19 +170,19 @@ void build_addr(char *str, struct in6_addr *addr)
         flog(LOG_ERR, "build_addr: inet_pton: %s", strerror(errno));
 }
 
-/*
+
+
+/*****************************************************************************
  * print_addr16
  *      Print ipv6 address in fully expanded 64-bit char form
  *
  * Inputs:
- * PARAMS
- *      const struct in6_addr * addr
- *          Binary ipv6 address
+ *  const struct in6_addr * addr
+ *      Binary ipv6 address
  *
  * Outputs:
- * PARAMS
- *      char * str
- *          String representation, fully padded.
+ *  char * str
+ *      String representation, fully padded.
  *
  * Return:
  *      void
@@ -134,9 +202,21 @@ void print_addr16(const struct in6_addr * addr, char * str)
 
 
 
-//***********************************************************
-// Take prefix in the form 1111:2222:3333:4444: and pad it to the ful length
-// Return value is the bit length of the unpadded prefix
+/*****************************************************************************
+ * prefixset
+ *      Take prefix in the form 1111:2222:3333:4444: and pad it to the
+ *      full length
+ *
+ * Inputs:
+ *  char * px
+ *      String representation, fully padded.
+ *
+ * Outputs:
+ *  As input
+ *
+ * Return:
+ *      -1 on error, else bit length of unpadded prefix.
+ */
 int prefixset(char *px)
 {
     size_t len = strlen(px);
@@ -173,6 +253,20 @@ int prefixset(char *px)
 }
 
 
+/*****************************************************************************
+ * trimwhitespace
+ *  Tidy up lines of text from the config file.
+ *
+ * Inputs:
+ *  char * str
+ *      String to be tidied.
+ *
+ * Outputs:
+ *  As input
+ *
+ * Return:
+ *  Pointer to the string (redundant)
+ */
 char *trimwhitespace(char *str)
 {
   char *end;
@@ -194,6 +288,23 @@ char *trimwhitespace(char *str)
 }
 
 
+/*****************************************************************************
+ * dumpHex
+ *  Take a lump of binary data (like an ethernet frame!) and print it in hex.
+ *  Useful for debugging!
+ *
+ * Inputs:
+ *  unsigned char *data
+ *      Lump of data
+ *  unsigned int len
+ *      Amount of data
+ * 
+ * Outputs:
+ *  Via printf to stdio
+ *
+ * Return:
+ *  void
+ */
 void dumpHex(unsigned char *data, unsigned int len)
 {
     int ix;
@@ -208,7 +319,22 @@ void dumpHex(unsigned char *data, unsigned int len)
 }
 
 
-
+/*****************************************************************************
+ * getLinkaddress
+ *  Get the link-level address (i.e. MAC address) for an interface.
+ *
+ * Inputs:
+ *  char * iface
+ *      String containg the interface name (e.g. "eth1")
+ *
+ * Outputs:
+ *  unsigned char * link
+ *      String of the form "00:12:34:56:78:90"
+ *
+ * Return:
+ *  0 is successful,
+ *  1 if error.
+ */
 int getLinkaddress( char * iface, unsigned char * link) {
     int sockfd, io;
     struct ifreq ifr;
