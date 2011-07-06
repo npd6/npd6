@@ -63,7 +63,6 @@ int open_packet_socket(void)
 int open_icmpv6_socket(void)
 {
     int sock;
-    struct icmp6_filter i6filter;
     int err, hoplimit;
 
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
@@ -78,19 +77,6 @@ int open_icmpv6_socket(void)
         return (-1);
     }
     flog(LOG_DEBUG, "setsockopt(IPV6_UNICAST_HOPS) OK");
-
-
-    
-//     // TODO Do we need the ICMP filter for only outbound?
-//     ICMP6_FILTER_SETPASSALL( &i6filter );
-//     err = setsockopt(sock, IPPROTO_ICMPV6, ICMP6_FILTER, &i6filter,
-//              sizeof(i6filter));
-//     if (err < 0)
-//     {
-//         flog(LOG_ERR, "setsockopt(ICMPV6_FILTER): %s", strerror(errno));
-//         return (-1);
-//     }
-//     flog(LOG_DEBUG, "setsockopt(ICMPV6_FILTER) OK");
 
     
     return sock;
