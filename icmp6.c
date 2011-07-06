@@ -58,7 +58,7 @@ int open_packet_socket(void)
     sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IPV6) );
     if (sock < 0)
     {
-        flog(LOG_ERR, "can't create socket(AF_INET6): %s", strerror(errno));
+        flog(LOG_ERR, "Can't create socket(AF_INET6): %s", strerror(errno));
         return (-1);
     }
 
@@ -68,7 +68,7 @@ int open_packet_socket(void)
         flog(LOG_ERR, "setsockopt(SO_ATTACH_FILTER): %s", strerror(errno));
         return (-1);
     }
-    flog(LOG_DEBUG, "setsockopt(SO_ATTACH_FILTER) OK");
+    flog(LOG_DEBUG2, "setsockopt(SO_ATTACH_FILTER) OK");
 
     return sock;
 }
@@ -104,7 +104,7 @@ int open_icmpv6_socket(void)
         flog(LOG_ERR, "setsockopt(IPV6_UNICAST_HOPS): %s", strerror(errno));
         return (-1);
     }
-    flog(LOG_DEBUG, "setsockopt(IPV6_UNICAST_HOPS) OK");
+    flog(LOG_DEBUG2, "setsockopt(IPV6_UNICAST_HOPS) OK");
 
     
     return sock;

@@ -26,7 +26,8 @@ char usage_str[] =
 {
 "\n"
 "  -c, --config=PATH      Sets the config file.  Default is /etc/npd6.conf.\n"
-"  -d, --debug            Sets the debug level.\n"
+"  -d, --debug            Sets the normal debug level.\n"
+"  -d2, --debug2          Sets full debug level. (Lots!)\n"
 "  -h, --help             Show this help screen.\n"
 "  -l, --logfile=PATH     Sets the log file, else default to syslog.\n"
 "  -v, --version          Print the version and quit.\n"
@@ -34,18 +35,19 @@ char usage_str[] =
 
 struct option prog_opt[] =
 {
-    {"config", 1, 0, 'c'},
-    {"debug", 0, 0, 'd'},
-    {"help", 0, 0, 'h'},
+    {"config",  1, 0, 'c'},
+    {"debug",   optional_argument, &debug, 1},
+    {"debug2",  optional_argument, &debug, 2},
+    {"help",    optional_argument, 0, 'h'},
     {"logfile", 1, 0, 'l'},
-    {"version", 0, 0, 'v'},
+    {"version", optional_argument, 0, 'v'},
     {NULL, 0, 0, 0}
 };
 #else
 char usage_str[] =
-    "[-hvd] [-c config_file] [-l log_file]\n";
+    "[-hv] [-d|-D] [-c config_file] [-l log_file]\n";
 #endif
-#define OPTIONS_STR "c:l:vhd"
+#define OPTIONS_STR "c:l:vhdD"
 
 struct Interface *IfaceList = NULL;
 
@@ -58,13 +60,12 @@ int main(int argc, char *argv[])
     int c;
 
     // Default some globals
-    debug = 0;
+    //debug = 0;
     logfile = NPD6_LOG;
     configfile = NPD6_CONF;
     strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
     interfaceIdx=-1;
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
-
 
     pname = ((pname=strrchr(argv[0],'/')) != NULL)?pname+1:argv[0];
     paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];
@@ -84,7 +85,10 @@ int main(int argc, char *argv[])
             logfile = optarg;
             break;
         case 'd':
-            debug = 1;
+            debug=1;
+            break;
+        case 'D':
+            debug=2;
             break;
         case 'v':
             showVersion();
@@ -112,7 +116,7 @@ int main(int argc, char *argv[])
     }
     
     flog(LOG_INFO, "Using normalised prefix %s/%d", prefixaddrstr, prefixaddrlen);
-    flog(LOG_DEBUG, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
+    flog(LOG_DEBUG2, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
 
     /* Raw socket for receiving NSs */
     sockpkt = open_packet_socket();
@@ -168,19 +172,18 @@ void dispatcher(void)
         if (rc > 0) {
             if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                flog(LOG_WARNING, "socket error on fds[0].fd");
+                flog(LOG_WARNING, "Socket error on fds[0].fd");
                 continue;
             }
             else if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                flog(LOG_WARNING, "socket error on fds[1].fd");
+                flog(LOG_WARNING, "Socket error on fds[1].fd");
                 continue;
             }
             else if (fds[0].revents & POLLIN)
             {
                 msglen = get_rx(msgdata);
-                flog(LOG_DEBUG, "get_rx() gave msg with len = %d", msglen);
-                //FLOG(LOG_DEBUG, "Wow!!! msglen = %d", msglen);
+                flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
 
                 // Have processNS() do the rest of validation and work...
                 processNS(msgdata, msglen);
@@ -188,30 +191,30 @@ void dispatcher(void)
             }
             else if ( rc == 0 )
             {
-                flog(LOG_DEBUG, "timer event");
+                flog(LOG_DEBUG, "Timer event");
                 // Timer fired?
                 // One day. If we implement timers.
             }
             else if ( rc == -1 )
             {
-                flog(LOG_ERR, "weird poll error: %s", strerror(errno));
+                flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
                 continue;
             }
             // Pick up and sigusr signals
             else if (sigusr1_received)
             {
-                flog(LOG_DEBUG, "sigusr1 seen in main dispatcher");
+                flog(LOG_DEBUG2, "sigusr1 seen in main dispatcher");
                 sigusr1_received = 0;
                 continue;
             }
             else if (sigusr2_received)
             {
-                flog(LOG_DEBUG, "sigusr2 seen in main dispatcher");
+                flog(LOG_DEBUG2, "sigusr2 seen in main dispatcher");
                 sigusr2_received = 0;
                 continue;
             }
 
-            flog(LOG_DEBUG, "timed out of poll(). Timeout was %d ms", DISPATCH_TIMEOUT);
+            flog(LOG_DEBUG, "Timed out of poll(). Timeout was %d ms", DISPATCH_TIMEOUT);
         }
     }
 }
@@ -247,6 +250,7 @@ int readConfig(char *configFileName)
     if ((configFileFD = fopen(configFileName, "r")) == NULL)
     {
         fprintf(stderr, "Can't open %s: %s\n", configFileName, strerror(errno));
+        flog(LOG_ERR, "Can't open config file %s: %s", configFileName, strerror(errno));
         return (-1);
     }
     // This is real dumb, noddy, u8nvalidated config parsing. We find a line begins with EITHER '//' OR
@@ -271,9 +275,9 @@ int readConfig(char *configFileName)
         
         if ( strcmp(lefttoken, "NPDprefix")==0 ) {
             strncpy( prefixaddrstr, righttoken, sizeof(prefixaddrstr));
-            flog(LOG_DEBUG, "supplied prefix is %s", prefixaddrstr);
             // We need to pad it up and record the length in bits
             prefixaddrlen = prefixset(prefixaddrstr);
+            flog(LOG_DEBUG, "Supplied prefix: %s, significant length = %d", prefixaddrstr, prefixaddrlen);
             // Build a binary image of it
             build_addr(prefixaddrstr, &prefixaddr);
         }
@@ -281,15 +285,15 @@ int readConfig(char *configFileName)
         {
             if ( strlen( righttoken) > INTERFACE_STRLEN)
             {
-                flog(LOG_ERR, "invalid length interface name - Exiting");
+                flog(LOG_ERR, "Invalid length interface name - Exiting");
                 exit(1);
             }
             strncpy( interfacestr, righttoken, sizeof(interfacestr));
-            flog(LOG_DEBUG, "supplied interface is %s", interfacestr);
+            flog(LOG_DEBUG, "Supplied interface is %s", interfacestr);
         }
         else
         {
-            flog(LOG_DEBUG, "Found noise in config file. Skipping.");
+            flog(LOG_DEBUG2, "Found noise in config file. Skipping.");
         }
     } while (len);
 
@@ -297,7 +301,7 @@ int readConfig(char *configFileName)
     // Now do a check to ensure all required params were actually given
     if ( ! strcmp(prefixaddrstr, NULLSTR) )
     {
-        flog(LOG_ERR, "prefix not defined in config file.");
+        flog(LOG_ERR, "Prefix not defined in config file.");
         return 1;
     }
     if ( ! strcmp(interfacestr, NULLSTR) )

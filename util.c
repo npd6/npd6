@@ -93,20 +93,25 @@ int npd6log(const char *function, int pri, char *format, ...)
     va_list param;
 
     // Pick up debug requests and decide if we are logging them
-    if (!debug && pri==LOG_DEBUG)
+    if (!debug && pri<LOG_DEBUG)
         return 0;  // Silent...
 
+    // Check for extra super power debug
+    if ( (debug!=2) && (pri == LOG_DEBUG2) )
+        return 0;   // Silent...
+
+    // Normalise the debug level
+    if( pri==LOG_DEBUG2)
+        pri=LOG_DEBUG;  // Since only we understand the two levels
+    
     va_start(param, format);
-
     vsnprintf(obuff, sizeof(obuff), format, param);
-
     now = time(NULL);
     timenow = localtime(&now);
     (void) strftime(timestamp, sizeof(timestamp), LOGTIMEFORMAT, timenow);
 
     fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
     fflush(logFileFD);
-
     va_end(param);
 
     return 0;
@@ -163,10 +168,10 @@ void print_addr(struct in6_addr *addr, char *str)
 void build_addr(char *str, struct in6_addr *addr)
 {
     int ret;
-    flog(LOG_DEBUG, "called with address %s", str);
+    flog(LOG_DEBUG2, "called with address %s", str);
     ret = inet_pton(AF_INET6, str, (void *)addr);
     if (ret == 1)
-        flog(LOG_DEBUG, "inet_pton OK");
+        flog(LOG_DEBUG2, "inet_pton OK");
     else if(ret == 0)
         flog(LOG_ERR, "invalid input address");
     else

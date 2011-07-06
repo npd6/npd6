@@ -51,6 +51,9 @@
 #define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
 // Well-funky macro...
 #define flog(pri, ...)      npd6log(__FUNCTION__, pri, __VA_ARGS__)
+// Extra debug level
+#define LOG_DEBUG2      8
+
 
 
 //*****************************************************************************

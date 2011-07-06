@@ -21,12 +21,30 @@
 #include "includes.h"
 #include "npd6.h"
 
-//*******************************************************************
-// Called by the dispatcher when we know that a NS has arrived.
-// Here the flow needs to be:
-// - Obtain the NS's target address
-// - Compare the target address's prefix with the configured prefix
-// - If they match, we will respond with a NA.
+
+/*****************************************************************************
+ * processNS
+ *  Takes a received Neighbor Solicitation and handles it. Main logic is:
+ *      - bit of extra validation.
+ *      - determine who it's asking about.
+ *      - see if that matches the prefix we are looking after.
+ *      - if it does, send a Neighbor Advertisement.
+ *
+ *  For more, see the inline comments - There's a lot going on here.
+ *
+ * Inputs:
+ *  char *msg
+ *      The received NS.
+ *  int len
+ *      The length of the received NS.
+ *
+ * Outputs:
+ *  Potentially, sends the Neighbor Advertisement.
+ *
+ * Return:
+ *      void
+ *
+ */
 void processNS( unsigned char *msg,
                 unsigned int len)
 {
@@ -66,9 +84,10 @@ void processNS( unsigned char *msg,
     
 
     // Validate ICMP packet type, to ensure filter was correct
+    // In theory not required, as the filter CAN'T be wrong...!
     if ( icmph->icmp6_type == ND_NEIGHBOR_SOLICIT )
     {
-        flog(LOG_DEBUG, "Validated packet as icmp6 neighbor solicitation.");
+        flog(LOG_DEBUG2, "Confirmed packet as icmp6 Neighbor Solicitation.");
         srcaddr = &ip6h->ip6_src;
         dstaddr = &ip6h->ip6_dst;
         if (debug)
@@ -84,6 +103,11 @@ void processNS( unsigned char *msg,
         flog(LOG_ERR, "Received impossible packet... filter failed. Oooops.");
         exit(1);
     }
+
+    // TODO
+    // Based upon the dstaddr, record if this was a unicast or multicast NS.
+    // If unicast, we'll use that later when we decide whether to add the
+    // target link-layer option to any outgoing NA.
 
     // Within the NS, who are they looking for?
     targetaddr = (struct in6_addr *)&(ns->nd_ns_target);
@@ -159,34 +183,54 @@ void processNS( unsigned char *msg,
         mhdr.msg_control = (void *) cmsg;
         mhdr.msg_controllen = sizeof(chdr);
 
-        flog(LOG_DEBUG, "Outbound message built");
+        flog(LOG_DEBUG2, "Outbound message built");
 
         err = sendmsg( sockicmp, &mhdr, 0);
         if (err < 0)
             flog(LOG_ERR, "sendmsg returned with error %d = %s", errno, strerror(errno));
         else
-            flog(LOG_DEBUG, "sendmsg completed OK");
+            flog(LOG_DEBUG2, "sendmsg completed OK");
         
     }
 }
 
-//*******************************************************************
-// Compares a1 and a2 up to the bit limit.
-// Returns 1 if they match, else 0
+
+/*****************************************************************************
+ * addr6match
+ *      Compare two binary ipv6 addresses and see if they match
+ *      in the first N bits.
+ *
+ * Inputs:
+ *  a1 & a2 are the addresses to be compared, in form in6_addr.
+ *  bits is the number of bits to compare, starting from the left.
+ *
+ * Outputs:
+ *  void
+ *
+ * Return:
+ *      1 if we match, else 0.
+ *
+ */
 int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
 {
     int idx, bdx;
+
+    if (bits > 64)
+    {
+        flog(LOG_ERR, "Bits > 64 (%d) does not make sense.", bits);
+        return 0;
+    }
     
     for (bdx=1,idx=0; bdx<=bits; bdx+=4, idx++)
     {
         if ( a1->s6_addr[idx] != a2->s6_addr[idx])
         {
-            flog(LOG_DEBUG, "match failed at bit position %d", bdx);
+            flog(LOG_DEBUG2, "Match failed at bit position %d", bdx);
             return 0;
         }
     }
 
-    flog(LOG_DEBUG, "target and prefix matched up to bit position %d", bits);
+    flog(LOG_DEBUG2, "Target and prefix matched up to bit position %d", bits);
 
     return 1;
 }
