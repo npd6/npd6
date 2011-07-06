@@ -21,6 +21,25 @@
 #include "includes.h"
 #include "npd6.h"
 
+/*****************************************************************************
+ * open_packet_socket
+ *      Opens the packet-level socket, for incoming traffic,
+ *      and sets up the BSD PF.
+ *
+ * Inputs:
+ *  const struct in6_addr * addr
+ *      Binary ipv6 address
+ *
+ * Outputs:
+ *  char * str
+ *      String representation, *not* fully padded.
+ *
+ * Return:
+ *      void
+ *
+ * Notes:
+ *  Compare with print_addr16 - this version does not pad.
+ */
 int open_packet_socket(void)
 {
     int sock;
