@@ -89,7 +89,6 @@ int prefixset(char *);
 char *trimwhitespace(char *);
 void dumpHex(unsigned char *, unsigned int);
 int getLinkaddress( char *, unsigned char *);
-
 // icmp6.c
 int open_packet_socket(void);
 int open_icmpv6_socket(void);
@@ -106,28 +105,6 @@ int addr6match( struct in6_addr *, struct in6_addr *, int);
 //
 #define HWADDR_MAX 16
 #define MAX_PKT_BUFF    1500
-
-
-
-
-
-// struct Interface {
-// 	char    name[32];
-// 
-// 	struct in6_addr	if_addr;
-// 	unsigned int	if_index;
-// 
-// 	uint8_t		init_racount;	/* Initial RAs */
-// 
-// 	uint8_t		if_hwaddr[HWADDR_MAX];
-// 	int			if_hwaddr_len;
-// 	int			if_prefix_len;
-// 	int			if_maxmtu;
-// 
-// 	int			cease_adv;
-// 
-// 	struct Interface	*next;
-// };
 
 #endif
 

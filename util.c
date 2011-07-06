@@ -102,8 +102,23 @@ void build_addr(char *str, struct in6_addr *addr)
         flog(LOG_ERR, "build_addr: inet_pton: %s", strerror(errno));
 }
 
-//*******************************************************
-// Print ipv6 in fully expanded 64-bit char form
+/*
+ * print_addr16
+ *      Print ipv6 address in fully expanded 64-bit char form
+ *
+ * Inputs:
+ * PARAMS
+ *      const struct in6_addr * addr
+ *          Binary ipv6 address
+ *
+ * Outputs:
+ * PARAMS
+ *      char * str
+ *          String representation, fully padded.
+ *
+ * Return:
+ *      void
+ */
 void print_addr16(const struct in6_addr * addr, char * str)
 {    
    sprintf(str, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",

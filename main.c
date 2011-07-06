@@ -33,7 +33,7 @@ char usage_str[] = {
 
 struct option prog_opt[] = {
     {"config", 1, 0, 'c'},
-    {"debug", 1, 0, 'd'},
+    {"debug", 0, 0, 'd'},
     {"help", 0, 0, 'h'},
     {"logfile", 1, 0, 'l'},
     {"version", 0, 0, 'v'},
@@ -100,15 +100,15 @@ int main(int argc, char *argv[])
         printf("Exiting. Cannot open log file.");
         exit (1);
     }
-    flog(LOG_INFO, "Opened log file OK.");
+    flog(LOG_INFO, "*********************** npd6 *****************************");
     
     if ( readConfig(configfile) ) {
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
     }
     
-    flog(LOG_DEBUG, "From config, normalised prefix is %s/%d", prefixaddrstr, prefixaddrlen);
-    flog(LOG_DEBUG, "From config, ifIndex for %s is: %d", interfacestr, interfaceIdx);
+    flog(LOG_INFO, "Using normalised prefix %s/%d", prefixaddrstr, prefixaddrlen);
+    flog(LOG_DEBUG, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
 
     /* Raw socket for receiving NSs */
     sockpkt = open_packet_socket();
@@ -128,7 +128,6 @@ int main(int argc, char *argv[])
 
 
     /* Set up signal handlers */
-    //sigemptyset(&sigact.sa_mask);
     signal(SIGUSR1, usersignal);
     signal(SIGUSR2, usersignal);
     signal(SIGHUP, usersignal);
@@ -255,7 +254,8 @@ int readConfig(char *configFileName)
         cp = strdupa(linein);
         lefttoken = strtok(cp, delimiters);
         righttoken = strtok(NULL, delimiters);
-        if ( (lefttoken == NULL) || (righttoken == NULL) ) {
+        if ( (lefttoken == NULL) || (righttoken == NULL) )
+        {
             continue;
         }
         
@@ -267,19 +267,21 @@ int readConfig(char *configFileName)
             // Build a binary image of it
             build_addr(prefixaddrstr, &prefixaddr);
         }
-        else if ( strcmp(lefttoken, "NPDinterface")==0 ) {
+        else if ( strcmp(lefttoken, "NPDinterface")==0 )
+        {
             if ( strlen( righttoken) > INTERFACE_STRLEN)
             {
                 flog(LOG_ERR, "readConfig: invalid length interface name - Exiting");
                 exit(1);
             }
-            strncpy( interfacestr, righttoken, sizeof(prefixaddrstr));
+            strncpy( interfacestr, righttoken, sizeof(interfacestr));
             flog(LOG_DEBUG, "readConfig: supplied interface is %s", interfacestr);
         }
-        else {
+        else
+        {
             flog(LOG_DEBUG, "Found noise in config file. Skipping.");
         }
-    }while (len);
+    } while (len);
 
 
     // Now do a check to ensure all required params were actually given
