@@ -142,78 +142,76 @@ int main(int argc, char *argv[])
     /* And off we go... */
     dispatcher();
 
-    flog(LOG_ERR, "main: Fell back out of dispatcher... This is impossible.");
+    flog(LOG_ERR, "Fell back out of dispatcher... This is impossible.");
     return 0;
 }
 
 void dispatcher(void)
 {
-    struct pollfd fds[2];
-
-    flog(LOG_DEBUG, "dispatcher: Start");
+    struct pollfd   fds[2];
+    unsigned int    msglen;
+    unsigned char   msgdata[4096];
+    int             rc;
 
     memset(fds, 0, sizeof(fds));
     fds[0].fd = sockpkt;
     fds[0].events = POLLIN;
     fds[0].revents = 0;
-
     fds[1].fd = -1;
     fds[1].events = 0;
     fds[1].revents = 0;
 
     for (;;)
     {
-        int timeout = 180000;
-        int rc;
-
-        rc = poll(fds, sizeof(fds)/sizeof(fds[0]), timeout);
+        rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);
 
         if (rc > 0) {
             if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
                 flog(LOG_WARNING, "socket error on fds[0].fd");
+                continue;
             }
-            if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL))
+            else if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
                 flog(LOG_WARNING, "socket error on fds[1].fd");
+                continue;
             }
             else if (fds[0].revents & POLLIN)
             {
-                // Main event handling is in here
-                unsigned int len;
-                struct sockaddr_in6 rcv_addr;
-                struct in6_pktinfo *pkt_info = NULL;
-                unsigned char msg[4096];                
-              
-                // Get the message
-                len = get_rx(msg, &rcv_addr, &pkt_info);
-                flog(LOG_DEBUG, "get_rx() gave msg with len = %d", len);
+                msglen = get_rx(msgdata);
+                flog(LOG_DEBUG, "get_rx() gave msg with len = %d", msglen);
+                //FLOG(LOG_DEBUG, "Wow!!! msglen = %d", msglen);
 
                 // Have processNS() do the rest of validation and work...
-                processNS(msg, len);
+                processNS(msgdata, msglen);
+                continue;
             }
             else if ( rc == 0 )
             {
+                flog(LOG_DEBUG, "timer event");
                 // Timer fired?
                 // One day. If we implement timers.
             }
             else if ( rc == -1 )
             {
-                flog(LOG_ERR, "dispatcher: weird poll error: %s", strerror(errno));
+                flog(LOG_ERR, "weird poll error: %s", strerror(errno));
+                continue;
             }
-
-            // Pick up and sigusrN signals
-            if (sigusr1_received)
+            // Pick up and sigusr signals
+            else if (sigusr1_received)
             {
                 flog(LOG_DEBUG, "sigusr1 seen in main dispatcher");
                 sigusr1_received = 0;
+                continue;
             }
-            if (sigusr2_received)
+            else if (sigusr2_received)
             {
                 flog(LOG_DEBUG, "sigusr2 seen in main dispatcher");
                 sigusr2_received = 0;
+                continue;
             }
 
+            flog(LOG_DEBUG, "timed out of poll(). Timeout was %d ms", DISPATCH_TIMEOUT);
         }
     }
 }
@@ -273,7 +271,7 @@ int readConfig(char *configFileName)
         
         if ( strcmp(lefttoken, "NPDprefix")==0 ) {
             strncpy( prefixaddrstr, righttoken, sizeof(prefixaddrstr));
-            flog(LOG_DEBUG, "readConfig: supplied prefix is %s", prefixaddrstr);
+            flog(LOG_DEBUG, "supplied prefix is %s", prefixaddrstr);
             // We need to pad it up and record the length in bits
             prefixaddrlen = prefixset(prefixaddrstr);
             // Build a binary image of it
@@ -283,11 +281,11 @@ int readConfig(char *configFileName)
         {
             if ( strlen( righttoken) > INTERFACE_STRLEN)
             {
-                flog(LOG_ERR, "readConfig: invalid length interface name - Exiting");
+                flog(LOG_ERR, "invalid length interface name - Exiting");
                 exit(1);
             }
             strncpy( interfacestr, righttoken, sizeof(interfacestr));
-            flog(LOG_DEBUG, "readConfig: supplied interface is %s", interfacestr);
+            flog(LOG_DEBUG, "supplied interface is %s", interfacestr);
         }
         else
         {
@@ -299,12 +297,12 @@ int readConfig(char *configFileName)
     // Now do a check to ensure all required params were actually given
     if ( ! strcmp(prefixaddrstr, NULLSTR) )
     {
-        flog(LOG_ERR, "readConfig: prefix not defined in config file.");
+        flog(LOG_ERR, "prefix not defined in config file.");
         return 1;
     }
     if ( ! strcmp(interfacestr, NULLSTR) )
     {
-        flog(LOG_ERR, "readConfig: interface not defined in config file.");
+        flog(LOG_ERR, "interface not defined in config file.");
         return 1;
     }
 
@@ -319,7 +317,7 @@ int readConfig(char *configFileName)
 
     if (getLinkaddress( interfacestr, linkAddr) )
     {
-        flog(LOG_ERR, "readconfig: failed to convert interface specified to a link-level address.");
+        flog(LOG_ERR, "failed to convert interface specified to a link-level address.");
         return 1;
     }
 

@@ -57,13 +57,15 @@ void usersignal(int mysig)
     }
 }
 
-//*******************************************************
-// Log to the previously opened log file.
+
+
 /*****************************************************************************
- * flog
+ * npd6log
  *      Log as per level to the previously defined log file or system..
  *
  * Inputs:
+ *  char * fn name
+ *      From the caller's __FUNCTION__
  *  int pri
  *      Log level: e.g. LOG_ERR, LOG_INFO, LOG_DEBUG, etc.
  *  char *format
@@ -80,8 +82,10 @@ void usersignal(int mysig)
  * Return:
  *      0 on success
  *
+ * Notes:
+ *      This will be called from the macro expansion of "flog()"
  */
-int flog(int pri, char *format, ...)
+int npd6log(const char *function, int pri, char *format, ...)
 {
     time_t now;
     struct tm *timenow;
@@ -95,19 +99,18 @@ int flog(int pri, char *format, ...)
     va_start(param, format);
 
     vsnprintf(obuff, sizeof(obuff), format, param);
-    
+
     now = time(NULL);
     timenow = localtime(&now);
     (void) strftime(timestamp, sizeof(timestamp), LOGTIMEFORMAT, timenow);
 
-    fprintf(logFileFD, "[%s] %s\n", timestamp, obuff);
+    fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
     fflush(logFileFD);
 
     va_end(param);
 
     return 0;
 }
-
 
 
 /*****************************************************************************
@@ -160,14 +163,14 @@ void print_addr(struct in6_addr *addr, char *str)
 void build_addr(char *str, struct in6_addr *addr)
 {
     int ret;
-    flog(LOG_DEBUG, "build_addr: called with address %s", str);
+    flog(LOG_DEBUG, "called with address %s", str);
     ret = inet_pton(AF_INET6, str, (void *)addr);
     if (ret == 1)
-        flog(LOG_DEBUG, "build_addr: inet_pton OK");
+        flog(LOG_DEBUG, "inet_pton OK");
     else if(ret == 0)
-        flog(LOG_ERR, "build_addr: invalid input address");
+        flog(LOG_ERR, "invalid input address");
     else
-        flog(LOG_ERR, "build_addr: inet_pton: %s", strerror(errno));
+        flog(LOG_ERR, "inet_pton: %s", strerror(errno));
 }
 
 
@@ -244,10 +247,10 @@ int prefixset(char *px)
             strcat(px, "0000");
             return 56;
         case 39:
-            flog(LOG_ERR, "prefixset: Full 64-bits defined as the configured prefix. Sure???");
+            flog(LOG_ERR, "Full 64-bits defined as the configured prefix. Sure???");
             return 64;
         default:
-            flog(LOG_ERR, "prefixset: configured prefix not correctly formatted (len = %d)", len);
+            flog(LOG_ERR, "configured prefix not correctly formatted (len = %d)", len);
             return -1;
     }
 }
@@ -343,13 +346,13 @@ int getLinkaddress( char * iface, unsigned char * link) {
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0) {
-        flog(LOG_ERR, "getLinkaddress: failed to open a test SOCK_STREAM.");
+        flog(LOG_ERR, "failed to open a test SOCK_STREAM.");
         return 1;
     }
 
     io = ioctl(sockfd, SIOCGIFHWADDR, (char *)&ifr);
     if(io < 0) {
-        flog(LOG_ERR, "getLinkaddress ioctl failed to obtain link address");
+        flog(LOG_ERR, "octl failed to obtain link address");
         return 1;
     }
 

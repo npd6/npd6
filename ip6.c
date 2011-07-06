@@ -68,10 +68,11 @@ void processNS( unsigned char *msg,
     // Validate ICMP packet type, to ensure filter was correct
     if ( icmph->icmp6_type == ND_NEIGHBOR_SOLICIT )
     {
-        flog(LOG_DEBUG, "processNS: Validated packet as icmp6 neighbor solicitation.");
+        flog(LOG_DEBUG, "Validated packet as icmp6 neighbor solicitation.");
         srcaddr = &ip6h->ip6_src;
         dstaddr = &ip6h->ip6_dst;
-        if (debug) {
+        if (debug)
+        {
             print_addr(srcaddr, srcaddr_str);
             print_addr(dstaddr, dstaddr_str);
             flog( LOG_DEBUG, "src addr = %s", srcaddr_str);
@@ -80,28 +81,29 @@ void processNS( unsigned char *msg,
     }
     else
     {
-        flog(LOG_ERR, "processNS: received impossible packet... filter failed. Oooops.");
+        flog(LOG_ERR, "Received impossible packet... filter failed. Oooops.");
         exit(1);
     }
 
     // Within the NS, who are they looking for?
     targetaddr = (struct in6_addr *)&(ns->nd_ns_target);
-    if (debug) {
+    if (debug)
+    {
         print_addr16(targetaddr, targetaddr_str);
         print_addr16(&prefixaddr, prefixaddr_str);
-        flog(LOG_DEBUG, "processNS: NS has target addr: %s", targetaddr_str);
-        flog(LOG_DEBUG, "processNS: Target prefix configured is: %s", prefixaddr_str);
+        flog(LOG_DEBUG, "NS has target addr: %s", targetaddr_str);
+        flog(LOG_DEBUG, "Target prefix configured is: %s", prefixaddr_str);
     }
 
     // Does it match our configured prefix that we're interested in?
     if (! addr6match( targetaddr, &prefixaddr, 32) )
     {
-        flog(LOG_DEBUG, "processNS: target and prefix do not match. Ignoring NS");
+        flog(LOG_DEBUG, "Target and prefix do not match. Ignoring NS");
         return;
     }
     else
     {
-        flog(LOG_DEBUG, "processNS: target and prefix match");
+        flog(LOG_DEBUG, "Target and prefix match");
 
         // Start building up the header for the packet
         memset(( void *)&sockaddr, 0, sizeof(struct sockaddr_in6));
@@ -110,7 +112,6 @@ void processNS( unsigned char *msg,
         
         // Set the destination of the NA
         memcpy(&sockaddr.sin6_addr, srcaddr, sizeof(struct in6_addr));
-        //flog(LOG_DEBUG, "processNS: SOCKADDR building complete");
 
         // Set up the NA itself
         memset( nabuff, 0, sizeof(nabuff) );
@@ -131,13 +132,10 @@ void processNS( unsigned char *msg,
 
         memcpy( optdata, linkAddr, 6);
         
-        //flog(LOG_DEBUG, "processNS: NA building complete");
-
         // Build the io vector
         iovlen = sizeof(struct nd_neighbor_advert) + sizeof(struct nd_opt_hdr) + ETH_ALEN;
         iov.iov_len = iovlen;
         iov.iov_base = (caddr_t) nabuff;
-        //flog(LOG_DEBUG, "processNS: IO vector building complete");
 
         // Build the cmsg
         memset(chdr, 0, sizeof(chdr) );
@@ -145,15 +143,12 @@ void processNS( unsigned char *msg,
         cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo) );
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type = IPV6_PKTINFO;
-        //flog(LOG_DEBUG, "processNS: CMSG building complete");
 
         pkt_info = (struct in6_pktinfo *)CMSG_DATA(cmsg);
 
         // Set src (sending) addr and outgoing i/f for the datagram            
         memcpy(&pkt_info->ipi6_addr, &srcLinkAddr, sizeof(struct in6_addr) );
-        pkt_info->ipi6_ifindex = interfaceIdx;
-        
-        //flog(LOG_DEBUG, "processNS: PKTINFO building complete");
+        pkt_info->ipi6_ifindex = interfaceIdx;        
         
         // Build the mhdr
         memset(&mhdr, 0, sizeof(mhdr) );
@@ -164,13 +159,13 @@ void processNS( unsigned char *msg,
         mhdr.msg_control = (void *) cmsg;
         mhdr.msg_controllen = sizeof(chdr);
 
-        flog(LOG_DEBUG, "processNS: Outbound message built");
+        flog(LOG_DEBUG, "Outbound message built");
 
         err = sendmsg( sockicmp, &mhdr, 0);
         if (err < 0)
-            flog(LOG_ERR, "processNS: sendmsg returned with error %d = %s", errno, strerror(errno));
+            flog(LOG_ERR, "sendmsg returned with error %d = %s", errno, strerror(errno));
         else
-            flog(LOG_DEBUG, "processNS: sendmsg completed OK");
+            flog(LOG_DEBUG, "sendmsg completed OK");
         
     }
 }
@@ -186,12 +181,12 @@ int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
     {
         if ( a1->s6_addr[idx] != a2->s6_addr[idx])
         {
-            flog(LOG_DEBUG, "addr6match: match failed at bit position %d", bdx);
+            flog(LOG_DEBUG, "match failed at bit position %d", bdx);
             return 0;
         }
     }
 
-    flog(LOG_DEBUG, "addr6match: target and prefix matched up to bit position %d", bits);
+    flog(LOG_DEBUG, "target and prefix matched up to bit position %d", bits);
 
     return 1;
 }

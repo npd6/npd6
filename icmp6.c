@@ -21,30 +21,26 @@
 #include "includes.h"
 #include "npd6.h"
 
+
 /*****************************************************************************
  * open_packet_socket
  *      Opens the packet-level socket, for incoming traffic,
- *      and sets up the BSD PF.
+ *      and sets up the appropriate BSD PF.
  *
  * Inputs:
- *  const struct in6_addr * addr
- *      Binary ipv6 address
+ *  none
  *
  * Outputs:
- *  char * str
- *      String representation, *not* fully padded.
+ *  none
  *
  * Return:
- *      void
+ *      int sock on success, otherwise -1
  *
- * Notes:
- *  Compare with print_addr16 - this version does not pad.
  */
 int open_packet_socket(void)
 {
-    int sock;
-    int err;
-
+    int sock, err;
+    struct sock_fprog fprog;
     static const struct sock_filter filter[] =
     {
         BPF_STMT(BPF_LD|BPF_B|BPF_ABS,
@@ -55,8 +51,7 @@ int open_packet_socket(void)
         BPF_STMT(BPF_RET|BPF_K, 0),
         BPF_STMT(BPF_RET|BPF_K, 0xffffffff),
     };
-
-    struct sock_fprog fprog;
+    
     fprog.filter = (struct sock_filter *)filter;
     fprog.len = sizeof filter / sizeof filter[0];
    
@@ -79,15 +74,29 @@ int open_packet_socket(void)
 }
 
 
+/*****************************************************************************
+ * open_icmpv6_socket
+ *      Opens the ipv6-level socket, for outgoing traffic.
+ *
+ * Inputs:
+ *  none
+ *
+ * Outputs:
+ *  none
+ *
+ * Return:
+ *      int sock on success, otherwise -1
+ *
+ */
 int open_icmpv6_socket(void)
 {
-    int sock;
-    int err, hoplimit;
+    int sock, err, hoplimit;
 
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
-    // Hop-limit default
-    hoplimit=255;
+    // TODO
+    // Hop-limit - default for now to max, but should be configurable
+    hoplimit=IP6_MAXHOPS;
     err = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &hoplimit,
              sizeof(hoplimit));
     if (err < 0)
@@ -101,14 +110,32 @@ int open_icmpv6_socket(void)
     return sock;
 }
 
-/*
- * get_rx()
+
+
+/*****************************************************************************
+ * get_rx
+ *      Called from the dispatcher to pull in the received packet.
+ *
+ * Inputs:
+ *  sockpkt is where the data is waiting.
+ *      
+ * Outputs:
+ *  unsigned char *msg
+ *      The data.
+ *
+ * Return:
+ *      int length of data received, otherwise -1 on error
+ *
+ * NOTES:
+ * There's a lot of temp data structures needed here, but we really don't
+ * care about them afterwards. Once we've got the raw data and the len
+ * we're good.
  */
-int get_rx(unsigned char *msg, struct sockaddr_in6 *addr, struct in6_pktinfo **pkt_info) 
+int get_rx(unsigned char *msg) 
 {
+    struct sockaddr_in6 saddr;
     struct msghdr mhdr;
     struct iovec iov;
-
     int len;
     fd_set rfds;
 
@@ -118,8 +145,7 @@ int get_rx(unsigned char *msg, struct sockaddr_in6 *addr, struct in6_pktinfo **p
     if( select( sockpkt+1, &rfds, NULL, NULL, NULL ) < 0 )
     {
         if (errno != EINTR)
-            flog(LOG_ERR, "get_rx() select: %s", strerror(errno));
-
+            flog(LOG_ERR, "select failed with: %s", strerror(errno));
         return -1;
     }
 
@@ -127,8 +153,8 @@ int get_rx(unsigned char *msg, struct sockaddr_in6 *addr, struct in6_pktinfo **p
     iov.iov_base = (caddr_t) msg;
 
     memset(&mhdr, 0, sizeof(mhdr));
-    mhdr.msg_name = (caddr_t)addr;
-    mhdr.msg_namelen = sizeof(*addr);
+    mhdr.msg_name = (caddr_t)&saddr;
+    mhdr.msg_namelen = sizeof(saddr);
     mhdr.msg_iov = &iov;
     mhdr.msg_iovlen = 1;
     mhdr.msg_control = NULL;
@@ -139,10 +165,9 @@ int get_rx(unsigned char *msg, struct sockaddr_in6 *addr, struct in6_pktinfo **p
     if (len < 0)
     {
         if (errno != EINTR)
-            flog(LOG_ERR, "get_rx recvmsg: %s", strerror(errno));
-        return len;
+            flog(LOG_ERR, "recvmsg failed with: %s", strerror(errno));
+        return -1;
     }
-
 
     return len;
 }

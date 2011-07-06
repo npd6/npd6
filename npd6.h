@@ -19,90 +19,96 @@
 */
 
 #ifndef NPD6_H
-#define NPD6_H
 
+#define NPD6_H
 #include "includes.h"
 
-#define min(a,b)    (((a) < (b)) ? (a) : (b))
-
 #ifndef NPD6_CONF
-#   define NPD6_CONF "/etc/npd6.conf"
+#define NPD6_CONF "/etc/npd6.conf"
 #endif
 
 #ifndef NPD6_LOG
-#   define NPD6_LOG "/var/log/npd6.log"
+#define NPD6_LOG "/var/log/npd6.log"
 #endif
 
 #ifndef NULL
-#   define NULL 0
+#define NULL 0
 #endif
 
+// Assumption that we support longopts
 #ifndef HAVE_GETOPT_LONG
-#   define HAVE_GETOPT_LONG 1
+#define HAVE_GETOPT_LONG 1
 #endif
 
-#define LOGTIMEFORMAT "%b %d %H:%M:%S"
-
+// Misc bits and bobs
+#define LOGTIMEFORMAT       "%b %d %H:%M:%S"
 #define INTERFACE_STRLEN    12
+#define NULLSTR             "null"
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#define IP6_MAXHOPS         255
+#define HWADDR_MAX          16
+#define MAX_PKT_BUFF        1500
+#define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
+// Well-funky macro...
+#define flog(pri, ...)      npd6log(__FUNCTION__, pri, __VA_ARGS__)
 
-#define NULLSTR "null"
 
-//extern int sock;
+//*****************************************************************************
 // Globals
-char *pname;
-char *configfile;
-char *paramName;
-int sockicmp;
-int sockpkt;
-int debug;
-FILE *logFileFD;
-FILE *configFileFD;
-volatile int sigusr1_received;
-volatile int sigusr2_received;
+//
+char            *pname;
+char            *configfile;
+char            *paramName;
+int             sockicmp;
+int             sockpkt;
+int             debug;
+FILE            *logFileFD;
+FILE            *configFileFD;
+volatile int    sigusr1_received;
+volatile int    sigusr2_received;
 
 // Interface we're interested in
-char interfacestr[INTERFACE_STRLEN];
-unsigned int interfaceIdx;
-unsigned char linkAddr[6];
+char            interfacestr[INTERFACE_STRLEN];
+unsigned int    interfaceIdx;
+unsigned char   linkAddr[6];
 
-// Recording the target prefix
-char prefixaddrstr[INET6_ADDRSTRLEN];
-struct in6_addr prefixaddr;
-unsigned int prefixaddrlen;
+// Regarding the target prefix being matched
+char            prefixaddrstr[INET6_ADDRSTRLEN];
+struct          in6_addr prefixaddr;
+unsigned int    prefixaddrlen;
 
-//
-// PROTOTYPES
+
+
+//*****************************************************************************
+// Prototypes
 //
 // main.c
-void showVersion(void);
-void showUsage(void);
-int readConfig(char *);
-int openLog(char *);
-void dispatcher(void);
-// util.c
-int flog(int pri, char *format, ...);
-void usersignal(int signal);
-void print_addr(struct in6_addr *addr, char *str);
-void print_addr16(const struct in6_addr * addr, char * str);
-void build_addr(char *, struct in6_addr *);
-int prefixset(char *);
-char *trimwhitespace(char *);
-void dumpHex(unsigned char *, unsigned int);
-int getLinkaddress( char *, unsigned char *);
-// icmp6.c
-int open_packet_socket(void);
-int open_icmpv6_socket(void);
-int get_rx(unsigned char *, struct sockaddr_in6 *, struct in6_pktinfo **);
-//netlink.c
-void process_netlink_msg(int sock);
-int netlink_socket(void);
-// ip6,c
-void processNS( unsigned char *, unsigned int);
-int addr6match( struct in6_addr *, struct in6_addr *, int);
+void    showVersion(void);
+void    showUsage(void);
+int     readConfig(char *);
+int     openLog(char *);
+void    dispatcher(void);
 
-//
-// Various limits and important values
-//
+// util.c
+int     npd6log(const char *function, int pri, char *format, ...);
+void    usersignal(int signal);
+void    print_addr(struct in6_addr *addr, char *str);
+void    print_addr16(const struct in6_addr * addr, char * str);
+void    build_addr(char *, struct in6_addr *);
+int     prefixset(char *);
+char    *trimwhitespace(char *);
+void    dumpHex(unsigned char *, unsigned int);
+int     getLinkaddress( char *, unsigned char *);
+
+// icmp6.c
+int     open_packet_socket(void);
+int     open_icmpv6_socket(void);
+int     get_rx(unsigned char *);
+
+// ip6,c
+void    processNS( unsigned char *, unsigned int);
+int     addr6match( struct in6_addr *, struct in6_addr *, int);
+
 #define HWADDR_MAX 16
 #define MAX_PKT_BUFF    1500
 
