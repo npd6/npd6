@@ -105,11 +105,10 @@ void processNS( unsigned char *msg,
         exit(1);
     }
 
-    // TODO
     // Based upon the dstaddr, record if this was a unicast or multicast NS.
     // If unicast, we'll use that later when we decide whether to add the
     // target link-layer option to any outgoing NA.
-    if (1)
+    if ( IN6_IS_ADDR_MULTICAST(dstaddr) )
     {
         // This was a multicast NS
         multicastNS = 1;
@@ -129,6 +128,15 @@ void processNS( unsigned char *msg,
         flog(LOG_DEBUG, "Target prefix configured is: %s", prefixaddr_str);
     }
 
+    // BUG 009
+    // If tgt-addr == dst-addr then ignore this, as the automatic mechanisms
+    // will reply themselves - we don't need to.
+    if ( nsIgnoreLocal && IN6_ARE_ADDR_EQUAL(targetaddr, dstaddr) )
+    {
+        flog(LOG_DEBUG, "Ignoring NS since tgt==dst. Leave to kernel.");
+        return;
+    }
+
     // Does it match our configured prefix that we're interested in?
     if (! addr6match( targetaddr, &prefixaddr, 32) )
     {
@@ -137,7 +145,7 @@ void processNS( unsigned char *msg,
     }
     else
     {
-        flog(LOG_DEBUG, "Target and prefix match");
+        flog(LOG_DEBUG, "Target and prefix match. Build NA response.");
 
         // Start building up the header for the packet
         memset(( void *)&sockaddr, 0, sizeof(struct sockaddr_in6));
@@ -153,14 +161,26 @@ void processNS( unsigned char *msg,
         nad->nd_na_type = ND_NEIGHBOR_ADVERT;
         nad->nd_na_code = 0;
         nad->nd_na_cksum = 0;
-        nad->nd_na_flags_reserved |= ND_NA_FLAG_SOLICITED;
+        // BUG 010
+        if (naRouter)
+        {
+            nad->nd_na_flags_reserved |= ND_NA_FLAG_SOLICITED | ND_NA_FLAG_ROUTER;
+        }
+        else
+        {
+            nad->nd_na_flags_reserved |= ND_NA_FLAG_SOLICITED;
+        }
+            
         memcpy(&(nad->nd_na_target), targetaddr, sizeof(struct in6_addr) );
 
+        // BUG 002
         if (multicastNS || naLinkOptFlag)
         {
+            // If the NS that came in was to a multicast address
+            // or if we have forced the option for all packets anyway
+            // then add a target link-layer option to the outgoing NA.
             // Per rfc, we must add dest link-addr option for NSs that came
-            // to the multicast group addr. And do it anyway for all if the config
-            // option was set.
+            // to the multicast group addr.
             opthdr = (struct nd_opt_hdr *)&nabuff[sizeof(struct nd_neighbor_advert)] ;
             opthdr->nd_opt_type = ND_OPT_TARGET_LINKADDR;
             opthdr->nd_opt_len = 1; // Units of 8-octets
@@ -175,7 +195,7 @@ void processNS( unsigned char *msg,
         {
             // The NS was unicast AND the config option was unset.
             // Build the io vector
-            iovlen = sizeof(struct nd_neighbor_advert) + ETH_ALEN;
+            iovlen = sizeof(struct nd_neighbor_advert);
             iov.iov_len = iovlen;
             iov.iov_base = (caddr_t) nabuff;
         }

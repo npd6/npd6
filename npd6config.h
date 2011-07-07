@@ -23,6 +23,9 @@
 #define NPD6PREFIX      "prefix"
 #define NPD6INTERFACE   "interface"
 #define NPD6OPTFLAG     "linkOption"
+#define NPD6LOCALIG     "ignoreLocal"
+#define NPD6ROUTERNA    "routerNA"
+#define NPD6MAXHOPS     "maxHops"
 
 #define SET             "true"
 #define UNSET           "false"

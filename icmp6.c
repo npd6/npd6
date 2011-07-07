@@ -90,21 +90,18 @@ int open_packet_socket(void)
  */
 int open_icmpv6_socket(void)
 {
-    int sock, err, hoplimit;
+    int sock, err;
 
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
-    // TODO
-    // Hop-limit - default for now to max, but should be configurable
-    hoplimit=IP6_MAXHOPS;
-    err = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &hoplimit,
-             sizeof(hoplimit));
+    // BUG 008
+    err = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &maxHops, sizeof(maxHops));
     if (err < 0)
     {
-        flog(LOG_ERR, "setsockopt(IPV6_UNICAST_HOPS): %s", strerror(errno));
+        flog(LOG_ERR, "setsockopt(IPV6_UNICAST_HOPS = %d): %s", maxHops, strerror(errno));
         return (-1);
     }
-    flog(LOG_DEBUG2, "setsockopt(IPV6_UNICAST_HOPS) OK");
+    flog(LOG_DEBUG2, "setsockopt(IPV6_UNICAST_HOPS = %d) OK", maxHops);
 
     
     return sock;

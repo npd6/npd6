@@ -45,7 +45,7 @@
 #define INTERFACE_STRLEN    12
 #define NULLSTR             "null"
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
-#define IP6_MAXHOPS         255
+#define MAXMAXHOPS         255
 #define HWADDR_MAX          16
 #define MAX_PKT_BUFF        1500
 #define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
@@ -81,7 +81,10 @@ struct          in6_addr prefixaddr;
 unsigned int    prefixaddrlen;
 
 // Key behaviour
-int             naLinkOptFlag;
+int             naLinkOptFlag;      // From config file NPD6OPTFLAG
+int             nsIgnoreLocal;      // From config file NPD6LOCALIG
+int             naRouter;           // From config file NPD6ROUTERNA
+int             maxHops;            // From cobnfig file NPD6MAXHOPS
 
 
 //*****************************************************************************

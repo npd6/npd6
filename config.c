@@ -112,7 +112,67 @@ int readConfig(char *configFileName)
                 exit(1);
             }
         }
-         /**********************************
+        /**********************************
+        * Ignore local NS flag
+        **********************************/
+        else if ( strcmp(lefttoken, NPD6LOCALIG)==0 )
+        {
+            if ( !strcmp( righttoken, SET ) )
+            {
+                flog(LOG_DEBUG, "ignoreLocal flag SET");
+                nsIgnoreLocal = 1;
+            }
+            else if ( !strcmp( righttoken, UNSET ) )
+            {
+                flog(LOG_DEBUG, "ignoreLocal flag UNSET");
+                nsIgnoreLocal = 0;
+            }
+            else
+            {
+                flog(LOG_ERR, "ignoreLocal flag - Bad value");
+                exit(1);
+            }
+        }
+        /**********************************
+        * NA ROUTER flag
+        **********************************/
+        else if ( strcmp(lefttoken, NPD6ROUTERNA)==0 )
+        {
+            if ( !strcmp( righttoken, SET ) )
+            {
+                flog(LOG_DEBUG, "routerNA flag SET");
+                naRouter = 1;
+            }
+            else if ( !strcmp( righttoken, UNSET ) )
+            {
+                flog(LOG_DEBUG, "routerNA flag UNSET");
+                naRouter = 0;
+            }
+            else
+            {
+                flog(LOG_ERR, "routerNA flag - Bad value");
+                exit(1);
+            }
+        }
+        /**********************************
+        * ICMP6 max hops
+        **********************************/
+        else if ( strcmp(lefttoken, NPD6MAXHOPS)==0 )
+        {
+            maxHops = -1;
+            maxHops = atoi(righttoken);
+            
+            if ( (maxHops < 0) || (maxHops > MAXMAXHOPS) )
+            {
+                flog(LOG_ERR, "maxHops - invalid value specified in config.");
+                exit(1);
+            }
+            else
+            {
+                flog(LOG_DEBUG, "maxHops set to %d", maxHops);
+            }
+        }        
+        /**********************************
         * junk
         **********************************/
         else

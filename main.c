@@ -66,7 +66,12 @@ int main(int argc, char *argv[])
     strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
     interfaceIdx=-1;
-    naLinkOptFlag = 1;
+
+    // Default config file values as required
+    naLinkOptFlag = 0;
+    nsIgnoreLocal = 1;
+    naRouter = 1;
+    maxHops = MAXMAXHOPS;
 
     pname = ((pname=strrchr(argv[0],'/')) != NULL)?pname+1:argv[0];
     paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];
