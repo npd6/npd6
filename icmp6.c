@@ -20,6 +20,7 @@
 
 #include "includes.h"
 #include "npd6.h"
+#include <netpacket/packet.h>
 
 
 /*****************************************************************************
@@ -41,6 +42,7 @@ int open_packet_socket(void)
 {
     int sock, err;
     struct sock_fprog fprog;
+    struct sockaddr_ll lladdr;
     static const struct sock_filter filter[] =
     {
         BPF_STMT(BPF_LD|BPF_B|BPF_ABS,
@@ -58,10 +60,28 @@ int open_packet_socket(void)
     sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IPV6) );
     if (sock < 0)
     {
-        flog(LOG_ERR, "Can't create socket(AF_INET6): %s", strerror(errno));
+        flog(LOG_ERR, "Can't create socket(PF_PACKET): %s", strerror(errno));
         return (-1);
     }
+    flog(LOG_DEBUG2, "Created PF_PACKET socket OK.");
 
+    // Bind the socket to the interface we're interested in
+    memset(&lladdr, 0, sizeof(lladdr));
+    lladdr.sll_family = AF_PACKET;
+    lladdr.sll_protocol = htons(ETH_P_IPV6);
+    lladdr.sll_ifindex = interfaceIdx;
+    lladdr.sll_hatype = 0;
+    lladdr.sll_pkttype = 0;
+    lladdr.sll_halen = 0;
+    err=bind(sock, (struct sockaddr *)&lladdr, sizeof(lladdr));
+    if (err < 0)
+    {
+        flog(LOG_ERR, "packet socket bind to interface %d failed: %s", interfaceIdx, strerror(errno));
+        return (-1);
+    }
+    flog(LOG_DEBUG2, "packet socket bind to interface %d OK", interfaceIdx);
+
+    // Tie the BSD-PF filter to the socket
     err = setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, &fprog, sizeof(fprog));
     if (err < 0)
     {
@@ -69,6 +89,7 @@ int open_packet_socket(void)
         return (-1);
     }
     flog(LOG_DEBUG2, "setsockopt(SO_ATTACH_FILTER) OK");
+
 
     return sock;
 }
@@ -93,6 +114,11 @@ int open_icmpv6_socket(void)
     int sock, err;
 
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    if (sock < 0)
+    {   //BUG 012
+        flog(LOG_ERR, "Can't create socket(AF_INET6): %s", strerror(errno));
+        return (-1);
+    }
 
     // BUG 008
     err = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &maxHops, sizeof(maxHops));
@@ -136,6 +162,9 @@ int get_rx(unsigned char *msg)
     int len;
     fd_set rfds;
 
+    unsigned char control[2048];
+    
+
     FD_ZERO( &rfds );
     FD_SET( sockpkt, &rfds );
 
@@ -154,9 +183,12 @@ int get_rx(unsigned char *msg)
     mhdr.msg_namelen = sizeof(saddr);
     mhdr.msg_iov = &iov;
     mhdr.msg_iovlen = 1;
-    mhdr.msg_control = NULL;
-    mhdr.msg_controllen = 0;
-
+    //mhdr.msg_control = NULL;
+    //mhdr.msg_controllen = 0;
+    mhdr.msg_control = control;
+    mhdr.msg_controllen = sizeof(control);
+    flog(LOG_DEBUG2, "Calling recvmsg() with controllen = %d", sizeof(control));
+    
     len = recvmsg(sockpkt, &mhdr, 0);
 
     if (len < 0)
@@ -165,6 +197,10 @@ int get_rx(unsigned char *msg)
             flog(LOG_ERR, "recvmsg failed with: %s", strerror(errno));
         return -1;
     }
+
+
+    flog(LOG_DEBUG2, "Returned from recvmsg() with controlen = %d", mhdr.msg_controllen);
+    
 
     return len;
 }
