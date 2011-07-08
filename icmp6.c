@@ -162,9 +162,6 @@ int get_rx(unsigned char *msg)
     int len;
     fd_set rfds;
 
-    unsigned char control[2048];
-    
-
     FD_ZERO( &rfds );
     FD_SET( sockpkt, &rfds );
 
@@ -183,12 +180,9 @@ int get_rx(unsigned char *msg)
     mhdr.msg_namelen = sizeof(saddr);
     mhdr.msg_iov = &iov;
     mhdr.msg_iovlen = 1;
-    //mhdr.msg_control = NULL;
-    //mhdr.msg_controllen = 0;
-    mhdr.msg_control = control;
-    mhdr.msg_controllen = sizeof(control);
-    flog(LOG_DEBUG2, "Calling recvmsg() with controllen = %d", sizeof(control));
-    
+    mhdr.msg_control = NULL;
+    mhdr.msg_controllen = 0;
+
     len = recvmsg(sockpkt, &mhdr, 0);
 
     if (len < 0)
@@ -198,9 +192,6 @@ int get_rx(unsigned char *msg)
         return -1;
     }
 
-
-    flog(LOG_DEBUG2, "Returned from recvmsg() with controlen = %d", mhdr.msg_controllen);
-    
 
     return len;
 }
