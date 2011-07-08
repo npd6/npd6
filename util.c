@@ -261,6 +261,7 @@ int prefixset(char *px)
 }
 
 
+
 /*****************************************************************************
  * stripwhitespace
  *  Tidy up lines of text from the config file.
@@ -323,8 +324,6 @@ void dumpHex(unsigned char *data, unsigned int len)
     for(ix=0; ix < len; ix++)
         printf("%02x", data[ix]);
     printf("<<<<<\n");
-
-
 }
 
 

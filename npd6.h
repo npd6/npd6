@@ -41,20 +41,18 @@
 #endif
 
 // Misc bits and bobs
+#define HWADDR_MAX          16
+#define MAX_PKT_BUFF        1500
 #define LOGTIMEFORMAT       "%b %d %H:%M:%S"
 #define INTERFACE_STRLEN    12
 #define NULLSTR             "null"
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
-#define MAXMAXHOPS         255
+#define MAXMAXHOPS          255
 #define HWADDR_MAX          16
 #define MAX_PKT_BUFF        1500
 #define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
-// Well-funky macro...
 #define flog(pri, ...)      npd6log(__FUNCTION__, pri, __VA_ARGS__)
-// Extra debug level
-#define LOG_DEBUG2      8
-
-
+#define LOG_DEBUG2          8
 
 //*****************************************************************************
 // Globals
@@ -67,8 +65,10 @@ int             sockpkt;
 int             debug;
 FILE            *logFileFD;
 FILE            *configFileFD;
-volatile int    sigusr1_received;
-volatile int    sigusr2_received;
+
+// signals
+unsigned int    sigusr1_received;
+unsigned int    sigusr2_received;
 
 // Interface we're interested in
 char            interfacestr[INTERFACE_STRLEN];
@@ -84,7 +84,7 @@ unsigned int    prefixaddrlen;
 int             naLinkOptFlag;      // From config file NPD6OPTFLAG
 int             nsIgnoreLocal;      // From config file NPD6LOCALIG
 int             naRouter;           // From config file NPD6ROUTERNA
-int             maxHops;            // From cobnfig file NPD6MAXHOPS
+int             maxHops;            // From config file NPD6MAXHOPS
 
 
 //*****************************************************************************
@@ -119,8 +119,6 @@ int     get_rx(unsigned char *);
 void    processNS( unsigned char *, unsigned int);
 int     addr6match( struct in6_addr *, struct in6_addr *, int);
 
-#define HWADDR_MAX 16
-#define MAX_PKT_BUFF    1500
 
 #endif
 
