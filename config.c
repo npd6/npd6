@@ -21,7 +21,6 @@
 #include "includes.h"
 #include "npd6.h"
 #include "npd6config.h"
-//## Test comment2
 
 //*******************************************************
 // Take supplied filename and open it, then parse the contents.
