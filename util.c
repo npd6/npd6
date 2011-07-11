@@ -224,11 +224,40 @@ void print_addr16(const struct in6_addr * addr, char * str)
  *
  * Return:
  *      -1 on error, else bit length of unpadded prefix.
+ *
+ * Note:
+ *  IMPORTANT! px *must* be big enough to hold full ipv6 string
  */
-int prefixset(char *px)
+int prefixset(char px[])
 {
-    size_t len = strlen(px);
+    size_t len;
+    int missing, c1, c2;
+    
+    // First we must ensure fully padded with leading 0s
+    for(c1=0; c1<INET6_ADDRSTRLEN; c1+=5 )
+    {
+        len = strlen(px);
+        for(c2 = 0; c2 < 4; c2++)
+        {
+            if (px[c1+c2] != ':')
+                continue;
+            else
+                break;
+        }
 
+        missing = abs(c2-4);
+
+        if (missing != 0)
+        {
+            char suffix[INET6_ADDRSTRLEN];
+            strcpy( suffix, &px[c1]);       // Grab the tail
+            memset(&px[c1], '0', missing);  // pad it with missing zeros
+            px[c1+missing] = '\0';          // Reterminate
+            strcat(px, suffix);             // Add the tail back
+        }
+    }
+
+    len = strlen(px);
     switch (len) {
         case 5:
             strcat(px, "0000:0000:0000:0000:0000:0000:0000");

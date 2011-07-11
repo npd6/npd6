@@ -138,7 +138,8 @@ void processNS( unsigned char *msg,
     }
 
     // Does it match our configured prefix that we're interested in?
-    if (! addr6match( targetaddr, &prefixaddr, 32) )
+    // BUG 013
+    if (! addr6match( targetaddr, &prefixaddr, prefixaddrlen) )
     {
         flog(LOG_DEBUG, "Target and prefix do not match. Ignoring NS");
         return;

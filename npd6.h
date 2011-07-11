@@ -103,7 +103,7 @@ void    usersignal(int );
 void    print_addr(struct in6_addr *, char *);
 void    print_addr16(const struct in6_addr * , char * );
 void    build_addr(char *, struct in6_addr *);
-int     prefixset(char *);
+int     prefixset(char []);
 void    stripwhitespace(char *);
 void    dumpHex(unsigned char *, unsigned int);
 int     getLinkaddress( char *, unsigned char *);

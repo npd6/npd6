@@ -71,9 +71,10 @@ int readConfig(char *configFileName)
         **********************************/
         if ( strcmp(lefttoken, NPD6PREFIX)==0 ) {
             strncpy( prefixaddrstr, righttoken, sizeof(prefixaddrstr));
+            flog(LOG_DEBUG, "Raw prefix: %s", prefixaddrstr);
             // We need to pad it up and record the length in bits
             prefixaddrlen = prefixset(prefixaddrstr);
-            flog(LOG_DEBUG, "Supplied prefix: %s, significant length = %d", prefixaddrstr, prefixaddrlen);
+            flog(LOG_DEBUG, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
             // Build a binary image of it
             build_addr(prefixaddrstr, &prefixaddr);
         }
