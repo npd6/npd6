@@ -35,6 +35,10 @@
 #define NULL 0
 #endif
 
+#ifndef TRUE
+#define TRUE    1
+#endif
+
 // Assumption that we support longopts
 #ifndef HAVE_GETOPT_LONG
 #define HAVE_GETOPT_LONG 1
@@ -65,6 +69,7 @@ int             sockpkt;
 int             debug;
 FILE            *logFileFD;
 FILE            *configFileFD;
+int             initialIFFlags;
 
 // signals
 unsigned int    sigusr1_received;
@@ -114,6 +119,8 @@ int     openLog(char *);
 int     open_packet_socket(void);
 int     open_icmpv6_socket(void);
 int     get_rx(unsigned char *);
+void    if_allmulti(char *, unsigned int);
+int     sockets_open(int);
 
 // ip6.c
 void    processNS( unsigned char *, unsigned int);

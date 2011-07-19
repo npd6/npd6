@@ -142,6 +142,8 @@ int main(int argc, char *argv[])
     }
     flog(LOG_DEBUG, "open_icmpv6_socket: OK.");
 
+    /* Set allmulti on the interface */
+    if_allmulti(interfacestr, TRUE);
 
     /* Set up signal handlers */
     signal(SIGUSR1, usersignal);

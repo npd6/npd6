@@ -196,3 +196,70 @@ int get_rx(unsigned char *msg)
     return len;
 }
 
+
+
+/*****************************************************************************
+ * if_allmulti
+ *      Called during startup and shutdown. Set/clear allmulti
+ *      as required.
+ *
+ * Inputs:
+ *  ifname is interface name
+ *  state: 1-> Set (or confirm) flag is enabled
+ *  state: 0-> Set flag back to initial condition.
+ *
+ * Outputs:
+ *  none
+ *
+ * Return:
+ *  void
+ */
+void if_allmulti(char *ifname, unsigned int state)
+{
+    struct ifreq    ifr;
+    int skfd;
+
+    skfd = socket(AF_INET, SOCK_DGRAM, 0);
+    
+    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+    // Get current flags, etc.
+    if (ioctl(skfd, SIOCGIFFLAGS, &ifr) < 0)
+    {
+        flog(LOG_ERR, "Unknown interface: %s, failed err = %s", ifname, strerror(errno));
+        exit(1);
+    }
+
+    // Save them in global
+    
+    if (state)
+    {
+        flog(LOG_DEBUG, "Setting IFFALLMULTI.");
+        initialIFFlags = ifr.ifr_flags;
+        ifr.ifr_flags |= IFF_ALLMULTI;
+        if (ifr.ifr_flags == initialIFFlags)
+        {
+            // Already set
+            flog(LOG_DEBUG, "Not required, was set at startup anyway.");
+            return;
+        }
+    }
+    else
+    {
+        flog(LOG_DEBUG, "Clearing IFFALLMULTI.");
+        // Was it originally set?
+        if (initialIFFlags & IFF_ALLMULTI)
+        {
+            // Was originally set - so leave it
+            flog(LOG_DEBUG, "Not required, was set at startup anyway.");
+            return;
+        }
+        // else unset it
+        ifr.ifr_flags &= ~IFF_ALLMULTI;
+    }
+    
+    if (ioctl(skfd, SIOCSIFFLAGS, &ifr) < 0)
+    {
+        flog(LOG_ERR, "Flag change failed: %s, failed err = %s", ifname, strerror(errno));
+        exit(1);
+    }    
+}
