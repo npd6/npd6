@@ -21,13 +21,13 @@
 #include "includes.h"
 #include "npd6.h"
 
-#ifdef HAVE_GETOPT_LONG
 char usage_str[] =
 {
 "\n"
 "  -c, --config=PATH      Sets the config file.  Default is /etc/npd6.conf.\n"
 "  -d, --debug            Sets the normal debug level.\n"
-"  -d2, --debug2          Sets full debug level. (Lots!)\n"
+"  -D, --debug2           Sets full debug level. (Lots!)\n"
+"  -f, --foreground       Run in foreground, otherwise daemonize.\n"
 "  -h, --help             Show this help screen.\n"
 "  -l, --logfile=PATH     Sets the log file, else default to syslog.\n"
 "  -v, --version          Print the version and quit.\n"
@@ -35,27 +35,22 @@ char usage_str[] =
 
 struct option prog_opt[] =
 {
-    {"config",  1, 0, 'c'},
-    {"debug",   optional_argument, &debug, 1},
-    {"debug2",  optional_argument, &debug, 2},
+    {"config",  optional_argument, 0, 'c'},
+    {"debug",   optional_argument, 0, 'd'},
+    {"debug2",  optional_argument, 0, 'D'},
     {"help",    optional_argument, 0, 'h'},
-    {"logfile", 1, 0, 'l'},
+    {"logfile", optional_argument, 0, 'l'},
     {"version", optional_argument, 0, 'v'},
+    {"foreground", optional_argument, 0, 'f'},
     {NULL, 0, 0, 0}
 };
-#else
-char usage_str[] =
-    "[-hv] [-d|-D] [-c config_file] [-l log_file]\n";
-#endif
-#define OPTIONS_STR "c:l:vhdD"
+
+#define OPTIONS_STR "c::l::fhvdD"
 
 struct Interface *IfaceList = NULL;
 
 int main(int argc, char *argv[])
 {
-#ifdef HAVE_GETOPT_LONG
-    int opt_idx;
-#endif
     char *logfile;
     int c;
 
@@ -66,7 +61,7 @@ int main(int argc, char *argv[])
     strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
     interfaceIdx=-1;
-
+    daemonize=1;
     // Default config file values as required
     naLinkOptFlag = 0;
     nsIgnoreLocal = 1;
@@ -77,11 +72,7 @@ int main(int argc, char *argv[])
     paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];
 
     /* Parse the args */
-#ifdef HAVE_GETOPT_LONG
-    while ((c = getopt_long(argc, argv, OPTIONS_STR, prog_opt, &opt_idx)) > 0)
-#else
-    while ((c = getopt(argc, argv, OPTIONS_STR)) > 0)
-#endif
+    while ((c = getopt_long(argc, argv, OPTIONS_STR, prog_opt, NULL)) > 0)
     {
         switch (c) {
         case 'c':
@@ -95,6 +86,9 @@ int main(int argc, char *argv[])
             break;
         case 'D':
             debug=2;
+            break;
+        case 'f':
+            daemonize=0;
             break;
         case 'v':
             showVersion();
@@ -114,7 +108,7 @@ int main(int argc, char *argv[])
         exit (1);
     }
     flog(LOG_INFO, "*********************** npd6 *****************************");
-    
+
     if ( readConfig(configfile) )
     {
         flog(LOG_ERR, "Error in config file: %s", configfile);
@@ -145,11 +139,22 @@ int main(int argc, char *argv[])
     /* Set allmulti on the interface */
     if_allmulti(interfacestr, TRUE);
 
+    /* Seems like about the right time to daemonize (or not) */
+    if (daemonize)
+    {
+        if (daemon(0, 0) < 0 )
+        {
+            flog(LOG_ERR, "Failed to daemonize. Error: %s", strerror(errno) );
+            exit(1);
+        }
+    }
+    
     /* Set up signal handlers */
     signal(SIGUSR1, usersignal);
     signal(SIGUSR2, usersignal);
     signal(SIGHUP, usersignal);
     signal(SIGINT, usersignal);
+    signal(SIGTERM, usersignal);    // Typically used by init.d scripts
 
 
     /* And off we go... */

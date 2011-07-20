@@ -39,11 +39,6 @@
 #define TRUE    1
 #endif
 
-// Assumption that we support longopts
-#ifndef HAVE_GETOPT_LONG
-#define HAVE_GETOPT_LONG 1
-#endif
-
 // Misc bits and bobs
 #define HWADDR_MAX          16
 #define MAX_PKT_BUFF        1500
@@ -67,6 +62,7 @@ char            *paramName;
 int             sockicmp;
 int             sockpkt;
 int             debug;
+int             daemonize;
 FILE            *logFileFD;
 FILE            *configFileFD;
 int             initialIFFlags;

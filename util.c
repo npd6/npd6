@@ -61,6 +61,7 @@ void usersignal(int mysig)
             /* TODO action? */
             break;
         case SIGINT:
+        case SIGTERM:
             signal(SIGUSR2, usersignal);
             flog(LOG_DEBUG, "usersignal called with INT");
             /* We're dying, so handle directly here*/
