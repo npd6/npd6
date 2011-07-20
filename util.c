@@ -51,6 +51,17 @@ void usersignal(int mysig)
             flog(LOG_DEBUG, "usersignal called with USR2");
             sigusr2_received = 1;
             break;
+        case SIGHUP:
+            signal(SIGUSR2, usersignal);
+            flog(LOG_DEBUG, "usersignal called with HUP");
+            /* TODO action? */
+            break;
+        case SIGINT:
+            signal(SIGUSR2, usersignal);
+            flog(LOG_DEBUG, "usersignal called with INT");
+            /* We're dying, so handle directly here*/
+            dropdead();
+            break;
          default:
             flog(LOG_DEBUG, "usersignal(): Why am I here?");
             break;
@@ -422,4 +433,16 @@ void showVersion(void)
 }
 
 
+void dropdead(void)
+{
+    /* We're dying, so tidy up*/
 
+    /* Restore interface flags*/
+    if_allmulti(interfacestr, 0);
+
+    close(sockicmp);
+    close(sockpkt);
+
+    flog(LOG_ERR, "Tidied up. Goodbye cruel world.");
+    exit(0);
+}

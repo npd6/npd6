@@ -229,29 +229,27 @@ void if_allmulti(char *ifname, unsigned int state)
         exit(1);
     }
 
-    // Save them in global
-    
     if (state)
     {
-        flog(LOG_DEBUG, "Setting IFFALLMULTI.");
+        flog(LOG_DEBUG, "Setting IFFALLMULTI if required.");
         initialIFFlags = ifr.ifr_flags;
         ifr.ifr_flags |= IFF_ALLMULTI;
         if (ifr.ifr_flags == initialIFFlags)
         {
             // Already set
             flog(LOG_DEBUG, "Not required, was set at startup anyway.");
-            return;
+            goto tidyexit;;
         }
     }
     else
     {
-        flog(LOG_DEBUG, "Clearing IFFALLMULTI.");
+        flog(LOG_DEBUG, "Clearing IFFALLMULTI if required.");
         // Was it originally set?
         if (initialIFFlags & IFF_ALLMULTI)
         {
             // Was originally set - so leave it
             flog(LOG_DEBUG, "Not required, was set at startup anyway.");
-            return;
+            goto tidyexit;;
         }
         // else unset it
         ifr.ifr_flags &= ~IFF_ALLMULTI;
@@ -261,5 +259,9 @@ void if_allmulti(char *ifname, unsigned int state)
     {
         flog(LOG_ERR, "Flag change failed: %s, failed err = %s", ifname, strerror(errno));
         exit(1);
-    }    
-}
+    }
+
+tidyexit:
+    close(skfd);
+    return;
+    }

@@ -114,6 +114,7 @@ void    dumpHex(unsigned char *, unsigned int);
 int     getLinkaddress( char *, unsigned char *);
 void    showVersion(void);
 int     openLog(char *);
+void    dropdead(void);
 
 // icmp6.c
 int     open_packet_socket(void);

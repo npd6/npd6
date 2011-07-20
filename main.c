@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
     signal(SIGUSR1, usersignal);
     signal(SIGUSR2, usersignal);
     signal(SIGHUP, usersignal);
+    signal(SIGINT, usersignal);
 
 
     /* And off we go... */
