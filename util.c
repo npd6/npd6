@@ -44,12 +44,16 @@ void usersignal(int mysig)
         case SIGUSR1:
             signal(SIGUSR1, usersignal);
             flog(LOG_DEBUG, "usersignal called with USR1");
-            sigusr1_received = 1;
+            flog(LOG_INFO, "SIGUSR1 received: rereading config");
+            if ( readConfig(configfile) )
+            {
+                flog(LOG_ERR, "Error in config file: %s", configfile);
+                exit(1);
+            }
             break;
          case SIGUSR2:
             signal(SIGUSR2, usersignal);
             flog(LOG_DEBUG, "usersignal called with USR2");
-            sigusr2_received = 1;
             break;
         case SIGHUP:
             signal(SIGUSR2, usersignal);

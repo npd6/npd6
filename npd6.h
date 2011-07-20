@@ -71,10 +71,6 @@ FILE            *logFileFD;
 FILE            *configFileFD;
 int             initialIFFlags;
 
-// signals
-unsigned int    sigusr1_received;
-unsigned int    sigusr2_received;
-
 // Interface we're interested in
 char            interfacestr[INTERFACE_STRLEN];
 unsigned int    interfaceIdx;

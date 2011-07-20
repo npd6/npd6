@@ -209,19 +209,6 @@ void dispatcher(void)
                 flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
                 continue;
             }
-            // Pick up and sigusr signals
-            else if (sigusr1_received)
-            {
-                flog(LOG_DEBUG2, "sigusr1 seen in main dispatcher");
-                sigusr1_received = 0;
-                continue;
-            }
-            else if (sigusr2_received)
-            {
-                flog(LOG_DEBUG2, "sigusr2 seen in main dispatcher");
-                sigusr2_received = 0;
-                continue;
-            }
 
             flog(LOG_DEBUG, "Timed out of poll(). Timeout was %d ms", DISPATCH_TIMEOUT);
         }
