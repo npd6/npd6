@@ -25,6 +25,7 @@ SOURCES=main.c icmp6.c util.c ip6.c config.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=includes.h npd6.h
 EXECUTABLE=npd6
+INSTALL_PREFIX=/usr/local
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -36,3 +37,9 @@ $(EXECUTABLE): $(OBJECTS)
 
 clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
+
+install: all
+	cp etc/npd6 /etc/init.d/npd6
+	cp etc/npd6.conf /etc/npd6.conf.sample
+	cp npd6 $(INSTALL_PREFIX)/bin/
+
