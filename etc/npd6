@@ -7,9 +7,10 @@
 # Default-Stop:      0 1 6
 ### END INIT INFO
 
-# Author: Sean Groarke ,sgroarke@gmail.com>
+# Author: Sean Groarke, sgroarke@gmail.com>
 # $HeadURL$
 # $Id$
+
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
