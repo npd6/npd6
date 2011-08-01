@@ -18,6 +18,9 @@
 #   along with npd6.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# $Id$
+# $HeadURL$
+
 CC=gcc
 CFLAGS=-c -Wall -g 
 LDFLAGS=
