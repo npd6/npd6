@@ -281,28 +281,28 @@ int prefixset(char px[])
     switch (len) {
         case 5:
             strcat(px, "0000:0000:0000:0000:0000:0000:0000");
-            return 8;
+            return 16;
         case 10:
             strcat(px, "0000:0000:0000:0000:0000:0000");
-            return 16;
+            return 32;
         case 15:
             strcat(px, "0000:0000:0000:0000:0000");
-            return 24;
+            return 48;
         case 20:
             strcat(px, "0000:0000:0000:0000");
-            return 32;
+            return 64;
         case 25:
             strcat(px, "0000:0000:0000");
-            return 40;
+            return 80;
         case 30:
             strcat(px, "0000:0000");
-            return 48;
+            return 96;
         case 35:
             strcat(px, "0000");
-            return 56;
+            return 112;
         case 39:
-            flog(LOG_ERR, "Full 64-bits defined as the configured prefix. Sure???");
-            return 64;
+            flog(LOG_ERR, "Full 128-bits defined as the configured prefix. Sure???");
+            return 128;
         default:
             flog(LOG_ERR, "configured prefix not correctly formatted (len = %d)", len);
             return -1;

@@ -259,13 +259,15 @@ int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
 {
     int idx, bdx;
 
-    if (bits > 64)
+    flog(LOG_DEBUG2, "Called to match up to %d bits.", bits);
+
+    if (bits > 128)
     {
-        flog(LOG_ERR, "Bits > 64 (%d) does not make sense.", bits);
+        flog(LOG_ERR, "Bits > 128 (%d) does not make sense.", bits);
         return 0;
     }
     
-    for (bdx=1,idx=0; bdx<=bits; bdx+=4, idx++)
+    for (bdx=1,idx=0; bdx<=bits; bdx+=8, idx++)
     {
         if ( a1->s6_addr[idx] != a2->s6_addr[idx])
         {
