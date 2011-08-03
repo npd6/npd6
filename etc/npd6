@@ -14,10 +14,10 @@
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 DESC="npd6 - Neighbor proxy Daemon IPv6"
 NAME=npd6
-DAEMON=/data/sgroarke/npd6/$NAME
+DAEMON=/usr/local/bin/$NAME
 DAEMON_ARGS="--debug"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
