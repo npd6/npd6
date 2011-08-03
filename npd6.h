@@ -117,7 +117,7 @@ int     open_packet_socket(void);
 int     open_icmpv6_socket(void);
 int     get_rx(unsigned char *);
 void    if_allmulti(char *, unsigned int);
-int     sockets_open(int);
+int     init_sockets(void);
 
 // ip6.c
 void    processNS( unsigned char *, unsigned int);

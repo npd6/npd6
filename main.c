@@ -56,7 +56,7 @@ struct Interface *IfaceList = NULL;
 int main(int argc, char *argv[])
 {
     char *logfile;
-    int c;
+    int c, err;
 
     // Default some globals
     //debug = 0;
@@ -122,24 +122,12 @@ int main(int argc, char *argv[])
     flog(LOG_INFO, "Using normalised prefix %s/%d", prefixaddrstr, prefixaddrlen);
     flog(LOG_DEBUG2, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
 
-    /* Raw socket for receiving NSs */
-    sockpkt = open_packet_socket();
-    if (sockpkt < 0)
-    {
-        flog(LOG_ERR, "open_packet_socket: failed. Exiting.");
+    err = init_sockets();
+    if (err) {
+        flog(LOG_ERR, "init_sockets: failed to initialise one or both sockets.");
         exit(1);
     }
-    flog(LOG_DEBUG, "open_packet_socket: OK.");
-
-    /* ICMPv6 socket for sending NAs */
-    sockicmp = open_icmpv6_socket();
-    if (sockicmp < 0)
-    {
-        flog(LOG_ERR, "open_icmpv6_socket: failed. Exiting.");
-        exit(1);
-    }
-    flog(LOG_DEBUG, "open_icmpv6_socket: OK.");
-
+    
     /* Set allmulti on the interface */
     if_allmulti(interfacestr, TRUE);
 
@@ -173,7 +161,7 @@ void dispatcher(void)
     struct pollfd   fds[2];
     unsigned int    msglen;
     unsigned char   msgdata[4096];
-    int             rc;
+    int             rc, err;
 
     memset(fds, 0, sizeof(fds));
     fds[0].fd = sockpkt;
@@ -188,14 +176,27 @@ void dispatcher(void)
         rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);
 
         if (rc > 0) {
-            if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+            if (   fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)
+                || fds[1].revents & (POLLERR | POLLHUP | POLLNVAL) )
             {
-                flog(LOG_WARNING, "Socket error on fds[0].fd");
-                continue;
-            }
-            else if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL))
-            {
-                flog(LOG_WARNING, "Socket error on fds[1].fd");
+                flog(LOG_WARNING, "Major socket error on fds[0 or 1].fd");
+                // Try and recover
+                close(sockpkt);
+                close(sockicmp);
+                // Allow a moment for things to maybe return to normal...
+                sleep(1);
+                err = init_sockets();
+                if (err) {
+                    flog(LOG_ERR, "init_sockets: failed to reinitialise one or both sockets.");
+                    exit(1);
+                }                
+                memset(fds, 0, sizeof(fds));
+                fds[0].fd = sockpkt;
+                fds[0].events = POLLIN;
+                fds[0].revents = 0;
+                fds[1].fd = -1;
+                fds[1].events = 0;
+                fds[1].revents = 0;
                 continue;
             }
             else if (fds[0].revents & POLLIN)

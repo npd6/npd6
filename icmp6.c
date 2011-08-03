@@ -268,4 +268,44 @@ void if_allmulti(char *ifname, unsigned int state)
 tidyexit:
     close(skfd);
     return;
+}
+
+
+/*****************************************************************************
+ * init_sockets
+ *  Initialises the tx and rx sockets. Normally just called during startup,
+ *  but also to reinitialise sockets if they go bad.
+ *
+ * Inputs:
+ *  void
+ *
+ * Outputs:
+ *  Set globals sockpkt & sockicmp.
+ *
+ * Return:
+ *  Non-0 if failure, else 0.
+ */
+int init_sockets(void)
+{
+    int errcount = 0;
+
+    /* Raw socket for receiving NSs */
+    sockpkt = open_packet_socket();
+    if (sockpkt < 0)
+    {
+        flog(LOG_ERR, "open_packet_socket: failed.");
+        errcount++;
     }
+    flog(LOG_DEBUG, "open_packet_socket: OK.");
+
+    /* ICMPv6 socket for sending NAs */
+    sockicmp = open_icmpv6_socket();
+    if (sockicmp < 0)
+    {
+        flog(LOG_ERR, "open_icmpv6_socket: failed.");
+        errcount++;
+    }
+    flog(LOG_DEBUG, "open_icmpv6_socket: OK.");
+
+    return errcount;
+}
