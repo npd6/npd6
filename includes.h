@@ -43,32 +43,6 @@
 #include <grp.h>
 
 #include <sys/types.h>
-// #ifdef HAVE_INTTYPES_H
-// # include <inttypes.h>
-// #endif
-
-// #ifdef HAVE_SYS_PARAM_H
-// # include <sys/param.h>
-// #else
-// # ifdef HAVE_MACHINE_PARAM_H
-// #  include <machine/param.h>
-// # endif
-// # ifdef HAVE_MACHINE_LIMITS_H
-// #  include <machine/limits.h>
-// # endif
-// #endif
-
-// #if TIME_WITH_SYS_TIME
-// # include <sys/time.h>
-// # include <time.h>
-// #else
-// # if HAVE_SYS_TIME_H
-// #  include <sys/time.h>
-// # else
-// #  include <time.h>
-// # endif
-// #endif
-
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
