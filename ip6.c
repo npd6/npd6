@@ -40,7 +40,8 @@
  *  char *msg
  *      The received NS.
  *  int len
- *      The length of the received NS.
+ *      The length of the received (candidate) NS.
+ *      *** This has already been sanity checked back in the callers ***
  *
  * Outputs:
  *  Potentially, sends the Neighbor Advertisement.
@@ -106,7 +107,7 @@ void processNS( unsigned char *msg,
     else
     {
         flog(LOG_ERR, "Received impossible packet... filter failed. Oooops.");
-        exit(1);
+        return;
     }
 
     // Based upon the dstaddr, record if this was a unicast or multicast NS.

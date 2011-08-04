@@ -176,7 +176,7 @@ int get_rx(unsigned char *msg)
         return -1;
     }
 
-    iov.iov_len = 2048;
+    iov.iov_len = MAX_MSG_SIZE;
     iov.iov_base = (caddr_t) msg;
 
     memset(&mhdr, 0, sizeof(mhdr));
@@ -188,6 +188,14 @@ int get_rx(unsigned char *msg)
     mhdr.msg_controllen = 0;
 
     len = recvmsg(sockpkt, &mhdr, 0);
+
+    /* Impossible.. But let's not take chances */
+    if (len > MAX_MSG_SIZE)
+    {
+        flog(LOG_ERR, "Read more data from socket than we can handle. Ignoring it.");
+        return -1;
+    }
+    
 
     if (len < 0)
     {

@@ -46,13 +46,13 @@
 // Misc bits and bobs
 #define HWADDR_MAX          16
 #define MAX_PKT_BUFF        1500
+#define MAX_MSG_SIZE        2048
 #define LOGTIMEFORMAT       "%b %d %H:%M:%S"
 #define INTERFACE_STRLEN    12
 #define NULLSTR             "null"
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #define MAXMAXHOPS          255
 #define HWADDR_MAX          16
-#define MAX_PKT_BUFF        1500
 #define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
 #define flog(pri, ...)      npd6log(__FUNCTION__, pri, __VA_ARGS__)
 #define LOG_DEBUG2          8

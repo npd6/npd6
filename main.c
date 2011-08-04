@@ -160,7 +160,7 @@ void dispatcher(void)
 {
     struct pollfd   fds[2];
     unsigned int    msglen;
-    unsigned char   msgdata[4096];
+    unsigned char   msgdata[MAX_MSG_SIZE * 2];
     int             rc, err;
 
     memset(fds, 0, sizeof(fds));
@@ -202,6 +202,7 @@ void dispatcher(void)
             else if (fds[0].revents & POLLIN)
             {
                 msglen = get_rx(msgdata);
+                // msglen is checked for sanity already within get_rx()
                 flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
 
                 // Have processNS() do the rest of validation and work...
