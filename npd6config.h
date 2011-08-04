@@ -31,6 +31,11 @@
 #define NPD6ROUTERNA    "routerNA"
 #define NPD6MAXHOPS     "maxHops"
 
+// For logging system
+#define NPD6LOGGING     "logging"
+#define NPD6FILE        "file"
+#define NPD6SYSLOG      "syslog"
+
 #define SET             "true"
 #define UNSET           "false"
 

@@ -130,8 +130,17 @@ int npd6log(const char *function, int pri, char *format, ...)
     timenow = localtime(&now);
     (void) strftime(timestamp, sizeof(timestamp), LOGTIMEFORMAT, timenow);
 
-    fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
-    fflush(logFileFD);
+    if (logging == USE_FILE)
+    {
+        fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
+        fflush(logFileFD);
+    }
+
+    if (logging == USE_SYSLOG)
+    {
+        syslog(pri, "%s: %s\n", function, obuff);
+    }
+    
     va_end(param);
 
     return 0;
@@ -423,14 +432,23 @@ int getLinkaddress( char * iface, unsigned char * link) {
 // Upon return, logFileFD set unless we failed.
 int openLog(char *logFileName)
 {
+    if (logging == USE_FILE) {
+        if ((logFileFD = fopen(logFileName, "a")) == NULL)
+        {
+            fprintf(stderr, "Can't open %s: %s\n", logFileName, strerror(errno));
+            return (-1);
+        }
 
-    if ((logFileFD = fopen(logFileName, "a")) == NULL)
-    {
-        fprintf(stderr, "Can't open %s: %s\n", logFileName, strerror(errno));
-        return (-1);
+        return 0;
     }
 
-    return 0;
+    if (logging == USE_SYSLOG) {
+        openlog("npd6", (LOG_NDELAY|LOG_PID),LOG_DAEMON);
+        return 0;
+    }
+
+    // Error
+    return -1;
 }
 
 

@@ -33,35 +33,33 @@ char usage_str[] =
 "  -D, --debug2           Sets full debug level. (Lots!)\n"
 "  -f, --foreground       Run in foreground, otherwise daemonize.\n"
 "  -h, --help             Show this help screen.\n"
-"  -l, --logfile=PATH     Sets the log file, else default to syslog.\n"
+"  -l  --logfile=PATH     Sets the log file, else default to syslog.\n"
 "  -v, --version          Print the version and quit.\n"
 };
 
 struct option prog_opt[] =
 {
-    {"config",  optional_argument, 0, 'c'},
+    {"config",  required_argument, 0, 'c'},
     {"debug",   optional_argument, 0, 'd'},
     {"debug2",  optional_argument, 0, 'D'},
     {"help",    optional_argument, 0, 'h'},
-    {"logfile", optional_argument, 0, 'l'},
+    {"logfile", required_argument, 0, 'l'},
     {"version", optional_argument, 0, 'v'},
     {"foreground", optional_argument, 0, 'f'},
-    {NULL, 0, 0, 0}
+    {0, 0, 0, 0}
 };
 
-#define OPTIONS_STR "c::l::fhvdD"
+#define OPTIONS_STR "c:dDhl:vf"
 
 struct Interface *IfaceList = NULL;
 
 int main(int argc, char *argv[])
 {
-    char *logfile;
+    char logfile[FILENAME_MAX] = "";
+    char configfile[FILENAME_MAX] = NPD6_CONF;
     int c, err;
 
     // Default some globals
-    //debug = 0;
-    logfile = NPD6_LOG;
-    configfile = NPD6_CONF;
     strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
     interfaceIdx=-1;
@@ -72,18 +70,21 @@ int main(int argc, char *argv[])
     naRouter = 1;
     maxHops = MAXMAXHOPS;
 
-    pname = ((pname=strrchr(argv[0],'/')) != NULL)?pname+1:argv[0];
-    paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];
+    //pname = ((pname=strrchr(argv[0],'/')) != NULL)?pname+1:argv[0];
+    //paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];
 
     /* Parse the args */
     while ((c = getopt_long(argc, argv, OPTIONS_STR, prog_opt, NULL)) > 0)
     {
+        if (c==-1)
+            break;
+        
         switch (c) {
         case 'c':
-            configfile = optarg;
+            strcpy(configfile, optarg);
             break;
         case 'l':
-            logfile = optarg;
+            strcpy(logfile, optarg);
             break;
         case 'd':
             debug=1;
@@ -105,10 +106,20 @@ int main(int argc, char *argv[])
         }
     }
 
+    /* Sort out where to log */
+    if ( strlen(logfile) )
+    {
+        logging = USE_FILE;
+    }
+    else
+    {
+        logging = USE_SYSLOG;
+    }
+    
     /* Open the log and config*/
     if (openLog(logfile) < 0)
     {
-        printf("Exiting. Cannot open log file.");
+        printf("Exiting. Error in setting up logging correctly.\n");
         exit (1);
     }
     flog(LOG_INFO, "*********************** npd6 *****************************");

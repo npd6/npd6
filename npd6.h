@@ -56,6 +56,8 @@
 #define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
 #define flog(pri, ...)      npd6log(__FUNCTION__, pri, __VA_ARGS__)
 #define LOG_DEBUG2          8
+#define USE_FILE            1
+#define USE_SYSLOG          2
 
 //*****************************************************************************
 // Globals
@@ -68,6 +70,7 @@ int             sockpkt;
 int             debug;
 int             daemonize;
 FILE            *logFileFD;
+int             logging;
 FILE            *configFileFD;
 int             initialIFFlags;
 
