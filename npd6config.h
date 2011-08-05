@@ -22,14 +22,25 @@
  * $HeadURL$
  */
 
-// Config file strings
+// Order of #defines must equal order in the string array
+#define NPD6PREFIX      0
+#define NPD6INTERFACE   1
+#define NPD6OPTFLAG     2
+#define NPD6LOCALIG     3
+#define NPD6ROUTERNA    4
+#define NPD6MAXHOPS     5
 
-#define NPD6PREFIX      "prefix"
-#define NPD6INTERFACE   "interface"
-#define NPD6OPTFLAG     "linkOption"
-#define NPD6LOCALIG     "ignoreLocal"
-#define NPD6ROUTERNA    "routerNA"
-#define NPD6MAXHOPS     "maxHops"
+#define CONFIGTOTAL     6
+#define NOMATCH         -1
+char *configStrs[CONFIGTOTAL] =
+{
+    "prefix",
+    "interface",
+    "linkOption",
+    "ignoreLocal",
+    "routerNA",
+    "maxHops"
+};
 
 // For logging system
 #define NPD6LOGGING     "logging"
