@@ -494,11 +494,14 @@ void dropdead(void)
  */
 void dumpData(void)
 {
-    tEntries=0;
-
+    flog(LOG_INFO, "====================================");
     flog(LOG_INFO, "Dumping list of targets seen so far:");
+    flog(LOG_INFO, "------------------------------------");
+
     twalk(tRoot, tDump);
+    
     flog(LOG_INFO, "Total unique targets seen: %d", tEntries);
+    flog(LOG_INFO, "====================================");
 }
 
 
@@ -521,6 +524,12 @@ void storeTarget(struct in6_addr *newTarget)
     struct in6_addr *ptr;
     void *val;
 
+    if (tEntries >= collectTargets)
+    {
+        flog(LOG_INFO, "Reached max threshold of recorded targets (%d). Not recording.", collectTargets);
+        return;
+    }
+    
     // Take a permanenet copy of the target
     ptr = (struct in6_addr *)malloc(sizeof(struct in6_addr) );
     if (!ptr)
@@ -529,16 +538,8 @@ void storeTarget(struct in6_addr *newTarget)
     }
     memcpy(ptr, newTarget, sizeof(struct in6_addr) );
 
-    val = tfind( (void *)ptr, &tRoot, tCompare);
-    if (val==NULL)
-    {
-        // target was new
-        flog(LOG_DEBUG2, "Target address was new. Stored.");
-    }
-    else
-    {
-        flog(LOG_DEBUG2, "Target address was not new. Already stored.");
-    }
+    flog(LOG_DEBUG2, "Target address submitted to tSearch.");
+    val = tsearch( (void *)ptr, &tRoot, tCompare);
 }
 
 /*****************************************************************************
@@ -557,18 +558,45 @@ void storeTarget(struct in6_addr *newTarget)
 int tCompare(const void *pa, const void *pb)
 {
 
-    // We need to return 0 if the items match, or signed depending upon
-    // relative order. We only care if they match or not, so return either
-    // 0 for match, or 1 for not match.
+    // Comparing 128bit addresses, numerically, is non-trivial.
+    // To reduce the scope, we just bother with the lower 64 bits.
+    // In the longer term this is not adequate, but will do just
+    // fine for now...
+    // TODO Revisit and extend to full 128 bit comparison.
 
-    if ( addr6match( (struct in6_addr *)pa, (struct in6_addr *)pb, 128) )
+    long int paI=0, pbI=0;
+    int idx;
+    
+    char paS[INET6_ADDRSTRLEN], pbS[INET6_ADDRSTRLEN];
+    print_addr((struct in6_addr *)pa, paS);
+    print_addr((struct in6_addr *)pb, pbS);
+    flog(LOG_DEBUG2, "pa: %s", paS);
+    flog(LOG_DEBUG2, "pb: %s", pbS);
+    
+    
+    for(idx=8; idx<16; idx++)
     {
-        // Matched
+        paI += ((struct in6_addr *)pa)->s6_addr[idx];
+        pbI += ((struct in6_addr *)pb)->s6_addr[idx];
+        paI <<= 8;
+        pbI <<= 8;
+    }
+
+    if (paI == pbI)
+    {
+        flog(LOG_DEBUG2, "pa == pb");
+        tEntries++;
         return 0;
     }
-    else
+    else if (paI < pbI)
     {
-        // Not matched
+        flog(LOG_DEBUG2, "pa < pb");
+        return -1;
+    }
+    //else if (paI > pbI)
+    {
+        flog(LOG_DEBUG2, "pa > pb");
+        tEntries++;
         return 1;
     }
 }
@@ -601,7 +629,6 @@ void tDump(const void *nodep, const VISIT which, const int depth)
             data = *(struct in6_addr **) nodep;
             print_addr(data, addressString);
             flog(LOG_INFO, "Address: %s", addressString);
-            tEntries++;
             break;
     }
 }
