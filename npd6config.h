@@ -29,8 +29,9 @@
 #define NPD6LOCALIG     3
 #define NPD6ROUTERNA    4
 #define NPD6MAXHOPS     5
+#define NPD6TARGETS     6
 
-#define CONFIGTOTAL     6
+#define CONFIGTOTAL     7
 #define NOMATCH         -1
 char *configStrs[CONFIGTOTAL] =
 {
@@ -39,7 +40,8 @@ char *configStrs[CONFIGTOTAL] =
     "linkOption",
     "ignoreLocal",
     "routerNA",
-    "maxHops"
+    "maxHops",
+    "collectTargets"
 };
 
 // For logging system

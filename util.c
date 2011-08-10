@@ -47,7 +47,7 @@ void usersignal(int mysig)
     switch(mysig) {
         case SIGUSR1:
             signal(SIGUSR1, usersignal);
-            flog(LOG_DEBUG, "usersignal called with USR1");
+            flog(LOG_DEBUG, "called with USR1");
             flog(LOG_INFO, "SIGUSR1 received: rereading config");
             if ( readConfig(configfile) )
             {
@@ -57,22 +57,23 @@ void usersignal(int mysig)
             break;
          case SIGUSR2:
             signal(SIGUSR2, usersignal);
-            flog(LOG_DEBUG, "usersignal called with USR2");
+            flog(LOG_DEBUG, "called with USR2");
+            dumpData();
             break;
         case SIGHUP:
             signal(SIGUSR2, usersignal);
-            flog(LOG_DEBUG, "usersignal called with HUP");
+            flog(LOG_DEBUG, "called with HUP");
             /* TODO action? */
             break;
         case SIGINT:
         case SIGTERM:
             signal(SIGUSR2, usersignal);
-            flog(LOG_DEBUG, "usersignal called with INT");
+            flog(LOG_DEBUG, "called with INT");
             /* We're dying, so handle directly here*/
             dropdead();
             break;
          default:
-            flog(LOG_DEBUG, "usersignal(): Why am I here?");
+            flog(LOG_DEBUG, "Why am I here? Confused.");
             break;
     }
 }
@@ -475,3 +476,140 @@ void dropdead(void)
     flog(LOG_ERR, "Tidied up. Goodbye cruel world.");
     exit(0);
 }
+
+
+/*****************************************************************************
+ * dumpData
+ *  Dump internal data. Initially this will mean the set of collected
+ *  target addresses seen (if that option is enabled)
+ *
+ * Inputs:
+ *  tRoot is the tree of collected targets.
+ *
+ * Outputs:
+ *  Data is dumped to the defined log.
+ *
+ * Return:
+ *  Void
+ */
+void dumpData(void)
+{
+    tEntries=0;
+
+    flog(LOG_INFO, "Dumping list of targets seen so far:");
+    twalk(tRoot, tDump);
+    flog(LOG_INFO, "Total unique targets seen: %d", tEntries);
+}
+
+
+/*****************************************************************************
+ * storeTarget
+ *  Look int eh tRoot tree to see if we have it already. if we don't store
+ *  it in the tree. If we do have it, then ignore.
+ *
+ * Inputs:
+ *  in6_addr *Target - this is the newly seen target to check
+ *
+ * Outputs:
+ *  tRoot has a new item added if the address was new.
+ *
+ * Return:
+ *  Void
+ */
+void storeTarget(struct in6_addr *newTarget)
+{
+    struct in6_addr *ptr;
+    void *val;
+
+    // Take a permanenet copy of the target
+    ptr = (struct in6_addr *)malloc(sizeof(struct in6_addr) );
+    if (!ptr)
+    {
+        flog(LOG_ERR, "Malloc failed. Ignoring.");
+    }
+    memcpy(ptr, newTarget, sizeof(struct in6_addr) );
+
+    val = tfind( (void *)ptr, &tRoot, tCompare);
+    if (val==NULL)
+    {
+        // target was new
+        flog(LOG_DEBUG2, "Target address was new. Stored.");
+    }
+    else
+    {
+        flog(LOG_DEBUG2, "Target address was not new. Already stored.");
+    }
+}
+
+/*****************************************************************************
+ * tCompare
+ *  This is the compare fn used by the tree handler. 
+ *
+ * Inputs:
+ *  The two generic pointers are struct in6_addr *.
+ *
+ * Outputs:
+ *  None.
+ *
+ * Return:
+ *  0 if item already present, 1 if it was new.
+ */
+int tCompare(const void *pa, const void *pb)
+{
+
+    // We need to return 0 if the items match, or signed depending upon
+    // relative order. We only care if they match or not, so return either
+    // 0 for match, or 1 for not match.
+
+    if ( addr6match( (struct in6_addr *)pa, (struct in6_addr *)pb, 128) )
+    {
+        // Matched
+        return 0;
+    }
+    else
+    {
+        // Not matched
+        return 1;
+    }
+}
+
+
+/*****************************************************************************
+ * tDump
+ *  This is the action used when walking tRoot from dumpData()
+ *
+ * Inputs:
+ *  node, type of visit, depth - Check the man page for more...
+ *
+ * Outputs:
+ *  Data dumped to log.
+ *
+ * Return:
+ *  void
+ */
+void tDump(const void *nodep, const VISIT which, const int depth)
+{
+    struct in6_addr *data;
+    char addressString[INET6_ADDRSTRLEN];
+
+    switch (which) {
+        case preorder:
+        case endorder:
+            break;
+        case postorder:
+        case leaf:
+            data = *(struct in6_addr **) nodep;
+            print_addr(data, addressString);
+            flog(LOG_INFO, "Address: %s", addressString);
+            tEntries++;
+            break;
+    }
+}
+
+
+
+
+
+
+
+

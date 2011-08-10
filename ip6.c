@@ -153,6 +153,14 @@ void processNS( unsigned char *msg,
     {
         flog(LOG_DEBUG, "Target and prefix match. Build NA response.");
 
+        // If configured, log target to list
+        if (collectTargets)
+        {
+            flog(LOG_DEBUG, "Store target to list.");
+            storeTarget( targetaddr );
+
+        }
+        
         // Start building up the header for the packet
         memset(( void *)&sockaddr, 0, sizeof(struct sockaddr_in6));
         sockaddr.sin6_family = AF_INET6;

@@ -181,6 +181,22 @@ int readConfig(char *configFileName)
                         flog(LOG_DEBUG, "maxHops set to %d", maxHops);
                     }
                     break;
+                    
+                case NPD6TARGETS:
+                    collectTargets = -1;
+                    tRoot = NULL;
+                    collectTargets = atoi(righttoken);
+
+                    if ( (collectTargets < 0) || (collectTargets > MAXTARGETS) )
+                    {
+                        flog(LOG_ERR, "collectTargets - invalid value specified in config.");
+                        return 1;
+                    }
+                    else
+                    {
+                        flog(LOG_DEBUG, "collectTargets set to %d", collectTargets);
+                    }
+                    break;
             }
     } while (len);
 

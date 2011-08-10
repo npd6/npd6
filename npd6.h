@@ -58,6 +58,7 @@
 #define LOG_DEBUG2          8
 #define USE_FILE            1
 #define USE_SYSLOG          2
+#define MAXTARGETS          1000000         // Ultimate sane limit
 
 //*****************************************************************************
 // Globals
@@ -89,7 +90,13 @@ int             naLinkOptFlag;      // From config file NPD6OPTFLAG
 int             nsIgnoreLocal;      // From config file NPD6LOCALIG
 int             naRouter;           // From config file NPD6ROUTERNA
 int             maxHops;            // From config file NPD6MAXHOPS
+int             collectTargets;     // From config file NPD6TARGETS
 
+// Target tree data structures etc
+void            *tRoot;
+int             tCompare(const void *, const void *);
+void            tDump(const void *, const VISIT , const int);
+int             tEntries;
 
 //*****************************************************************************
 // Prototypes
@@ -114,6 +121,8 @@ int     getLinkaddress( char *, unsigned char *);
 void    showVersion(void);
 int     openLog(char *);
 void    dropdead(void);
+void    dumpData(void);
+void    storeTarget( struct in6_addr *);
 
 // icmp6.c
 int     open_packet_socket(void);

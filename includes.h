@@ -65,6 +65,9 @@
 #include <linux/filter.h>
 #include <stddef.h>
 
+// For treee handling
+#include <search.h>
+
 
 #endif /* INCLUDES_H */
 
