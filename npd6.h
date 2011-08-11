@@ -64,7 +64,6 @@
 // Globals
 //
 char            *pname;
-char            *configfile;
 char            *paramName;
 int             sockicmp;
 int             sockpkt;
@@ -72,6 +71,7 @@ int             debug;
 int             daemonize;
 FILE            *logFileFD;
 int             logging;
+char            configfile[FILENAME_MAX];
 FILE            *configFileFD;
 int             initialIFFlags;
 
@@ -121,8 +121,11 @@ int     getLinkaddress( char *, unsigned char *);
 void    showVersion(void);
 int     openLog(char *);
 void    dropdead(void);
-void    dumpData(void);
+void    dumpAddressData(void);
 void    storeTarget( struct in6_addr *);
+int     tCompare(const void *, const void *);
+void    tDump(const void *, const VISIT, const int);
+
 
 // icmp6.c
 int     open_packet_socket(void);

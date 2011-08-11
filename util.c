@@ -36,7 +36,7 @@
  *      The signal received.
  *
  * Outputs:
- *  None yet... placeholder
+ *  Various, depending upon the sig.
  *
  * Return:
  *      void
@@ -58,7 +58,7 @@ void usersignal(int mysig)
          case SIGUSR2:
             signal(SIGUSR2, usersignal);
             flog(LOG_DEBUG, "called with USR2");
-            dumpData();
+            dumpAddressData();
             break;
         case SIGHUP:
             signal(SIGUSR2, usersignal);
@@ -492,13 +492,18 @@ void dropdead(void)
  * Return:
  *  Void
  */
-void dumpData(void)
+void dumpAddressData(void)
 {
     flog(LOG_INFO, "====================================");
     flog(LOG_INFO, "Dumping list of targets seen so far:");
     flog(LOG_INFO, "------------------------------------");
 
     twalk(tRoot, tDump);
+
+    if (tEntries == collectTargets)
+    {
+        flog(LOG_INFO, "(reached the configured limit - there were maybe more.)");
+    }
     
     flog(LOG_INFO, "Total unique targets seen: %d", tEntries);
     flog(LOG_INFO, "====================================");
@@ -522,14 +527,7 @@ void dumpData(void)
 void storeTarget(struct in6_addr *newTarget)
 {
     struct in6_addr *ptr;
-    void *val;
 
-    if (tEntries >= collectTargets)
-    {
-        flog(LOG_INFO, "Reached max threshold of recorded targets (%d). Not recording.", collectTargets);
-        return;
-    }
-    
     // Take a permanenet copy of the target
     ptr = (struct in6_addr *)malloc(sizeof(struct in6_addr) );
     if (!ptr)
@@ -538,8 +536,35 @@ void storeTarget(struct in6_addr *newTarget)
     }
     memcpy(ptr, newTarget, sizeof(struct in6_addr) );
 
-    flog(LOG_DEBUG2, "Target address submitted to tSearch.");
-    val = tsearch( (void *)ptr, &tRoot, tCompare);
+    // We can't just tsearch() it into the tree, as there's no
+    // way to then know if the entry already existed or is now newly created.
+    // Hence we can't know to nump the count. So we tfind() first
+    // and only tsearch() if required. In a typical net the initial
+    // tfind() is going to return a result almost all the time, so the
+    // overhead of this double-call is actually low.
+    if ( tfind( (void *)ptr, &tRoot, tCompare) == NULL )
+    {
+        if (tEntries >= collectTargets)
+        {
+            flog(LOG_INFO, "Reached max threshold of recorded targets (%d). Not recording.", collectTargets);
+            return;
+        }
+        // New entry
+        flog(LOG_DEBUG2, "New entry - recording.");
+        if ( tsearch( (void *)ptr, &tRoot, tCompare) == NULL)
+        {
+            flog(LOG_ERR, "tsearch failed. Cannot record entry.");
+            return;
+        }
+        else
+        {
+            tEntries++;
+        }
+    }
+    else
+    {
+        flog(LOG_DEBUG2, "Entry already recorded. Ignoring.");
+    }
 }
 
 /*****************************************************************************
@@ -554,51 +579,40 @@ void storeTarget(struct in6_addr *newTarget)
  *
  * Return:
  *  0 if item already present, 1 if it was new.
+ * 
+ * Notes:
+ * Need to compare two 128 bit numbers! Yucky.
+ * On 64-bit, we could assume long int => 64 bit, but
+ * given we may be on 32-bit, need to assume long int
+ * is max 32 bit, as per ANSI.
+ *
+ * We also make use of the underlying structure of in6_addr,
+ * which is int[16]
+ *
+ * Needs to be moderately efficient, since if we're recording
+ * a lot of addresses we call this via tfind/tsearch quite a lot,
+ * so we do minimal-comparison.
  */
 int tCompare(const void *pa, const void *pb)
 {
-
-    // Comparing 128bit addresses, numerically, is non-trivial.
-    // To reduce the scope, we just bother with the lower 64 bits.
-    // In the longer term this is not adequate, but will do just
-    // fine for now...
-    // TODO Revisit and extend to full 128 bit comparison.
-
-    long int paI=0, pbI=0;
+    int paI=0, pbI=0;
     int idx;
-    
-    char paS[INET6_ADDRSTRLEN], pbS[INET6_ADDRSTRLEN];
-    print_addr((struct in6_addr *)pa, paS);
-    print_addr((struct in6_addr *)pb, pbS);
-    flog(LOG_DEBUG2, "pa: %s", paS);
-    flog(LOG_DEBUG2, "pb: %s", pbS);
-    
-    
-    for(idx=8; idx<16; idx++)
-    {
-        paI += ((struct in6_addr *)pa)->s6_addr[idx];
-        pbI += ((struct in6_addr *)pb)->s6_addr[idx];
-        paI <<= 8;
-        pbI <<= 8;
-    }
 
-    if (paI == pbI)
+    for(idx=0; idx<=15; idx++)
     {
-        flog(LOG_DEBUG2, "pa == pb");
-        tEntries++;
-        return 0;
-    }
-    else if (paI < pbI)
-    {
-        flog(LOG_DEBUG2, "pa < pb");
-        return -1;
-    }
-    //else if (paI > pbI)
-    {
-        flog(LOG_DEBUG2, "pa > pb");
-        tEntries++;
-        return 1;
-    }
+        paI = ((struct in6_addr *)pa)->s6_addr[idx];
+        pbI = ((struct in6_addr *)pb)->s6_addr[idx];
+
+        if (paI == pbI)
+            continue;
+        if (paI < pbI)
+            return -1;
+        else
+            return 1;
+    };
+    
+    // If we reach here, the items were identical
+    return 0;
 }
 
 

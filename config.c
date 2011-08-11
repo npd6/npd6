@@ -183,6 +183,14 @@ int readConfig(char *configFileName)
                     break;
                     
                 case NPD6TARGETS:
+                    // If we arrive here and the tRoot tree already exists,
+                    // then we're re-reading the config and so need to zap
+                    // the tRoot data first.
+                    if (tRoot != NULL)
+                    {
+                        tdestroy(tRoot, free);
+                        tEntries = 0;
+                    }
                     collectTargets = -1;
                     tRoot = NULL;
                     collectTargets = atoi(righttoken);

@@ -56,10 +56,10 @@ struct Interface *IfaceList = NULL;
 int main(int argc, char *argv[])
 {
     char logfile[FILENAME_MAX] = "";
-    char configfile[FILENAME_MAX] = NPD6_CONF;
     int c, err;
 
     // Default some globals
+    strncpy(configfile, NPD6_CONF, FILENAME_MAX);
     strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
     interfaceIdx=-1;
