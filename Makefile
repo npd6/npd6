@@ -29,6 +29,7 @@ OBJECTS=$(SOURCES:.c=.o)
 HEADERS=includes.h npd6.h
 EXECUTABLE=npd6
 INSTALL_PREFIX=/usr/local
+MAN_PREFIX=/usr/share/man
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -45,4 +46,6 @@ install: all
 	cp etc/npd6 /etc/init.d/npd6
 	cp etc/npd6.conf /etc/npd6.conf.sample
 	cp npd6 $(INSTALL_PREFIX)/bin/
+	cp man/npd6.conf.5.gz $(MAN_PREFIX)/man5/
+	cp man/npd6.8.gz $(MAN_PREFIX)/man8/
 

@@ -1,0 +1,70 @@
+.\" Manpage for npd6.
+.\" Contact sgroarke@gmail.com to correct errors or typos.
+.TH man 8 "07 August 2011" "0.4.1" "npd6 man page"
+.SH NAME
+npd6 \- neighbor proxy daemon ipv6
+.SH SYNOPSIS
+.B npd6
+.B "[ \-hvcdDf]"
+.BI "[ \-c " configfile " ]"
+.BI "[ \-l " logfile " ]"
+
+.SH DESCRIPTION
+npd6 is a daemon which listens on a nominated interface for IPv6 Neighbor Solicitations which match a defined prefix. If received it will then answer them with an appropriate Neighbor Advertisement.
+
+npd6 is configured using a config file (default /etc/npd6.conf) and also has a number of cli options to enable various levels of logging, debug, etc.
+
+
+.SH OPTIONS
+.B -h, --help
+.RS
+Displays short usage summary and then exits.
+
+.RE
+.B -v, --version
+.RS
+Displays the version of npd6 and then exits.
+
+.RE
+.TP
+.BI "-c " "configfile" ", --config " "configfile"
+Alternate config file. Default is /etc/npd6.conf See npd6.conf(5).
+
+.RE
+.B -d, --debug
+.RS
+Enabled debug logging - moderate.
+
+.RE
+.B -D, --debug2
+.RS
+Enabled debug logging - lots.
+
+.RE
+.B -f, --foreground
+.RS
+Run npd6 in the foreground, staying attached to the terminal. Default is that it daemonizes itself otherwise.
+
+.RE
+.TP
+.BI "-l " "logfile" ", --logfile " "logfile"
+The default is that npd6 logs via syslog. This parameter tells it to log directly to the nominated file. 
+
+.RE
+
+.SH FILES
+.I /etc/npd6.conf
+.RS
+Default configuration file.
+.RE
+.I /var/log/npd6
+.RS
+Default log file (if used)
+.RE
+.SH SEE ALSO
+npd6.conf(5)
+
+.SH BUGS
+No known bugs - Please report them to npd6Project@gmail.com
+.SH AUTHOR
+Sean Groarke (sgroarke@gmail.com)
