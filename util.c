@@ -494,6 +494,12 @@ void dropdead(void)
  */
 void dumpAddressData(void)
 {
+    if (!collectTargets)
+    {
+        flog(LOG_INFO, "Not dumping collected addresses - feature disabled via config.");
+        return;
+    }
+    
     flog(LOG_INFO, "====================================");
     flog(LOG_INFO, "Dumping list of targets seen so far:");
     flog(LOG_INFO, "------------------------------------");
