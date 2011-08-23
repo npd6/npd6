@@ -119,12 +119,11 @@ int open_icmpv6_socket(void)
 
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
     if (sock < 0)
-    {   //BUG 012
+    {
         flog(LOG_ERR, "Can't create socket(AF_INET6): %s", strerror(errno));
         return (-1);
     }
 
-    // BUG 008
     err = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &maxHops, sizeof(maxHops));
     if (err < 0)
     {

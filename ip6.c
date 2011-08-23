@@ -133,7 +133,6 @@ void processNS( unsigned char *msg,
         flog(LOG_DEBUG, "Local prefix: %s", prefixaddr_str);
     }
 
-    // BUG 009
     // If tgt-addr == dst-addr then ignore this, as the automatic mechanisms
     // will reply themselves - we don't need to.
     if ( nsIgnoreLocal && IN6_ARE_ADDR_EQUAL(targetaddr, dstaddr) )
@@ -143,7 +142,6 @@ void processNS( unsigned char *msg,
     }
 
     // Does it match our configured prefix that we're interested in?
-    // BUG 013
     if (! addr6match( targetaddr, &prefixaddr, prefixaddrlen) )
     {
         flog(LOG_DEBUG, "Target/:prefix - Ignore NS.");
@@ -175,7 +173,6 @@ void processNS( unsigned char *msg,
         nad->nd_na_type = ND_NEIGHBOR_ADVERT;
         nad->nd_na_code = 0;
         nad->nd_na_cksum = 0;
-        // BUG 010
         if (naRouter)
         {
             nad->nd_na_flags_reserved |= ND_NA_FLAG_SOLICITED | ND_NA_FLAG_ROUTER;
@@ -187,7 +184,6 @@ void processNS( unsigned char *msg,
             
         memcpy(&(nad->nd_na_target), targetaddr, sizeof(struct in6_addr) );
 
-        // BUG 002
         if (multicastNS || naLinkOptFlag)
         {
             // If the NS that came in was to a multicast address
