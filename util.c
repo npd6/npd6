@@ -193,9 +193,10 @@ void print_addr(struct in6_addr *addr, char *str)
  *      Binary ipv6 address
  *
  * Return:
- *      void
+ *      return code from inet_pton
+ *      1 => Good, else Bad
  */
-void build_addr(char *str, struct in6_addr *addr)
+int build_addr(char *str, struct in6_addr *addr)
 {
     int ret;
     flog(LOG_DEBUG2, "called with address %s", str);
@@ -206,6 +207,8 @@ void build_addr(char *str, struct in6_addr *addr)
         flog(LOG_ERR, "invalid input address");
     else
         flog(LOG_ERR, "inet_pton: %s", strerror(errno));
+
+    return ret;
 }
 
 
@@ -518,7 +521,7 @@ void dumpAddressData(void)
 
 /*****************************************************************************
  * storeTarget
- *  Look int eh tRoot tree to see if we have it already. if we don't store
+ *  Look in tRoot tree to see if we have it already. If we don't store
  *  it in the tree. If we do have it, then ignore.
  *
  * Inputs:
@@ -544,7 +547,7 @@ void storeTarget(struct in6_addr *newTarget)
 
     // We can't just tsearch() it into the tree, as there's no
     // way to then know if the entry already existed or is now newly created.
-    // Hence we can't know to nump the count. So we tfind() first
+    // Hence we can't know to bump the count. So we tfind() first
     // and only tsearch() if required. In a typical net the initial
     // tfind() is going to return a result almost all the time, so the
     // overhead of this double-call is actually low.
@@ -654,7 +657,45 @@ void tDump(const void *nodep, const VISIT which, const int depth)
 }
 
 
+/*****************************************************************************
+ * storeListEntry
+ *
+ * Inputs:
+ *  in6_addr *Target - this is the newly seen target to check
+ *
+ * Outputs:
+ *  lRoot has a new item added if the address was new.
+ *
+ * Return:
+ *  Void
+ */
+void storeListEntry(struct in6_addr *newEntry)
+{
+    struct in6_addr *ptr;
 
+    // Take a permanenet copy of the target
+    ptr = (struct in6_addr *)malloc(sizeof(struct in6_addr) );
+    if (!ptr)
+    {
+        flog(LOG_ERR, "Malloc failed. Ignoring.");
+    }
+    memcpy(ptr, newEntry, sizeof(struct in6_addr) );
+
+    if ( tfind( (void *)ptr, &lRoot, tCompare) == NULL )
+    {
+        // New entry
+        flog(LOG_DEBUG2, "New list entry");
+        if ( tsearch( (void *)ptr, &lRoot, tCompare) == NULL)
+        {
+            flog(LOG_ERR, "tsearch failed. Cannot record entry.");
+            return;
+        }
+    }
+    else
+    {
+        flog(LOG_ERR, "Dupe list entry. Ignoring.");
+    }
+}
 
 
 

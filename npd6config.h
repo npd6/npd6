@@ -30,8 +30,10 @@
 #define NPD6ROUTERNA    4
 #define NPD6MAXHOPS     5
 #define NPD6TARGETS     6
+#define NPD6LISTTYPE    7
+#define NPD6LISTADDR    8
 
-#define CONFIGTOTAL     7
+#define CONFIGTOTAL     9
 #define NOMATCH         -1
 char *configStrs[CONFIGTOTAL] =
 {
@@ -41,7 +43,9 @@ char *configStrs[CONFIGTOTAL] =
     "ignoreLocal",
     "routerNA",
     "maxHops",
-    "collectTargets"
+    "collectTargets",
+    "listtype",
+    "addrlist"
 };
 
 // For logging system
@@ -51,4 +55,8 @@ char *configStrs[CONFIGTOTAL] =
 
 #define SET             "true"
 #define UNSET           "false"
+
+#define NPD6NONE        "none"
+#define NPD6BLACK       "black"
+#define NPD6WHITE       "white"
 

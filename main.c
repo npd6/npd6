@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
     strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
     interfaceIdx=-1;
     daemonize=1;
+    // Default black/whitelisting to OFF
+    listType = NOLIST;
     // Default config file values as required
     naLinkOptFlag = 0;
     nsIgnoreLocal = 1;

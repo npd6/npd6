@@ -98,6 +98,15 @@ int             tCompare(const void *, const void *);
 void            tDump(const void *, const VISIT , const int);
 int             tEntries;
 
+// Black/whitelisting data
+void            *lRoot;
+int             listType;
+#define         NOLIST      0
+#define         BLACKLIST   1
+#define         WHITELIST   2
+
+
+
 //*****************************************************************************
 // Prototypes
 //
@@ -113,7 +122,7 @@ int     npd6log(const char *, int , char *, ...);
 void    usersignal(int );
 void    print_addr(struct in6_addr *, char *);
 void    print_addr16(const struct in6_addr * , char * );
-void    build_addr(char *, struct in6_addr *);
+int     build_addr(char *, struct in6_addr *);
 int     prefixset(char []);
 void    stripwhitespace(char *);
 void    dumpHex(unsigned char *, unsigned int);
@@ -125,6 +134,8 @@ void    dumpAddressData(void);
 void    storeTarget( struct in6_addr *);
 int     tCompare(const void *, const void *);
 void    tDump(const void *, const VISIT, const int);
+void    storeListEntry(struct in6_addr *);
+
 
 
 // icmp6.c

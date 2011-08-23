@@ -38,6 +38,8 @@ int readConfig(char *configFileName)
     const char delimiters[] = "=";
     char *lefttoken, *righttoken;
     char *cp;
+    // Used if building white/blacklist
+    struct  in6_addr    listEntry;
 
     if ((configFileFD = fopen(configFileName, "r")) == NULL)
     {
@@ -203,6 +205,39 @@ int readConfig(char *configFileName)
                     else
                     {
                         flog(LOG_DEBUG, "collectTargets set to %d", collectTargets);
+                    }
+                    break;
+                case NPD6LISTTYPE:
+                    if ( !strcmp( righttoken, NPD6NONE ) )
+                    {
+                        flog(LOG_DEBUG, "List-type = NONE");
+                        listType = NOLIST;
+                    }
+                    else if ( !strcmp( righttoken, NPD6BLACK ) )
+                    {
+                        flog(LOG_DEBUG, "List-type = BLACK");
+                        listType = BLACKLIST;
+                    }
+                    else if( !strcmp( righttoken, NPD6WHITE ) )
+                    {
+                        flog(LOG_DEBUG, "List-type = WHITE");
+                        listType = WHITELIST;
+                    }
+                    else
+                    {
+                        flog(LOG_ERR, "List-type = <invalid value> - Setting to NONE");
+                        listType = NOLIST;
+                    }
+                    break;
+                case NPD6LISTADDR:
+                    if (build_addr( righttoken, &listEntry) )
+                    {
+                        flog(LOG_DEBUG, "Address %s valid.", righttoken);
+                        storeListEntry(&listEntry);
+                    }
+                    else
+                    {
+                        flog(LOG_ERR, "Address %s invalid.", righttoken);
                     }
                     break;
             }

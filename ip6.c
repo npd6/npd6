@@ -141,6 +141,31 @@ void processNS( unsigned char *msg,
         return;
     }
 
+    // Check for black or white listing compliance
+    switch (listType) {
+        case NOLIST:
+            flog(LOG_DEBUG2, "Neither white nor black listing in operation.");
+            break;
+
+        case BLACKLIST:
+            // If active and tgt is in the list, bail.
+            if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
+            {
+                flog(LOG_INFO, "Ignoring NS for blacklisted address.");
+                return;
+            }
+            break;
+
+        case WHITELIST:
+            // If active and tgt is NOT in the list, bail.
+            if ( !tfind( (void *)targetaddr, &lRoot, tCompare) )
+            {
+                flog(LOG_INFO, "Ignoring NS for address not whitelisted.");
+                return;
+            }
+            break;
+    }
+
     // Does it match our configured prefix that we're interested in?
     if (! addr6match( targetaddr, &prefixaddr, prefixaddrlen) )
     {
