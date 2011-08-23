@@ -129,8 +129,8 @@ void processNS( unsigned char *msg,
     {
         print_addr16(targetaddr, targetaddr_str);
         print_addr16(&prefixaddr, prefixaddr_str);
-        flog(LOG_DEBUG, "NS has target addr: %s", targetaddr_str);
-        flog(LOG_DEBUG, "Target prefix configured is: %s", prefixaddr_str);
+        flog(LOG_DEBUG, "NS target addr: %s", targetaddr_str);
+        flog(LOG_DEBUG, "Local prefix: %s", prefixaddr_str);
     }
 
     // BUG 009
@@ -138,7 +138,7 @@ void processNS( unsigned char *msg,
     // will reply themselves - we don't need to.
     if ( nsIgnoreLocal && IN6_ARE_ADDR_EQUAL(targetaddr, dstaddr) )
     {
-        flog(LOG_DEBUG, "Ignoring NS since tgt==dst. Leave to kernel.");
+        flog(LOG_DEBUG, "tgt==dst - Ignore.");
         return;
     }
 
@@ -146,12 +146,12 @@ void processNS( unsigned char *msg,
     // BUG 013
     if (! addr6match( targetaddr, &prefixaddr, prefixaddrlen) )
     {
-        flog(LOG_DEBUG, "Target and prefix do not match. Ignoring NS");
+        flog(LOG_DEBUG, "Target/:prefix - Ignore NS.");
         return;
     }
     else
     {
-        flog(LOG_DEBUG, "Target and prefix match. Build NA response.");
+        flog(LOG_DEBUG, "Target:prefix - Build NA response.");
 
         // If configured, log target to list
         if (collectTargets)
