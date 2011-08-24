@@ -151,7 +151,11 @@ void processNS( unsigned char *msg,
             // If active and tgt is in the list, bail.
             if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
-                flog(LOG_INFO, "Ignoring NS for blacklisted address.");
+                if (!debug)
+                {
+                    print_addr16(targetaddr, targetaddr_str);
+                }
+                flog(LOG_INFO, "NS for blacklisted addr: %s", targetaddr_str);
                 return;
             }
             break;
@@ -160,7 +164,11 @@ void processNS( unsigned char *msg,
             // If active and tgt is NOT in the list, bail.
             if ( !tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
-                flog(LOG_INFO, "Ignoring NS for address not whitelisted.");
+                if (!debug)
+                {
+                    print_addr16(targetaddr, targetaddr_str);
+                }
+                flog(LOG_INFO, "NS for addr not whitelisted: %s", targetaddr_str);
                 return;
             }
             break;
@@ -181,7 +189,6 @@ void processNS( unsigned char *msg,
         {
             flog(LOG_DEBUG, "Store target to list.");
             storeTarget( targetaddr );
-
         }
         
         // Start building up the header for the packet

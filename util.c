@@ -114,7 +114,7 @@ int npd6log(const char *function, int pri, char *format, ...)
     va_list param;
 
     // Pick up debug requests and decide if we are logging them
-    if (!debug && pri<LOG_DEBUG)
+    if (!debug && pri>=LOG_DEBUG)
         return 0;  // Silent...
 
     // Check for extra super power debug
