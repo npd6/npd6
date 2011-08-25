@@ -90,7 +90,8 @@ int readConfig(char *configFileName)
             // If config params are being added, it should only be required
             // to update the strings in npd6config.h and then insert a
             // case XXXXXXX: here with self-contined code inside.
-            switch (strIdx) {
+            switch (strIdx)
+            {
                 case NOMATCH:
                     flog(LOG_DEBUG2, "Found noise in config file. Skipping.");
                     continue;
@@ -207,7 +208,14 @@ int readConfig(char *configFileName)
                         flog(LOG_DEBUG, "collectTargets set to %d", collectTargets);
                     }
                     break;
+                    
                 case NPD6LISTTYPE:
+                    // Zap the list if it already exists and we are thus re-reading
+                    // the config.
+                    if (lRoot != NULL)
+                    {
+                        tdestroy(lRoot, free);
+                    }
                     if ( !strcmp( righttoken, NPD6NONE ) )
                     {
                         flog(LOG_DEBUG, "List-type = NONE");
@@ -229,6 +237,7 @@ int readConfig(char *configFileName)
                         listType = NOLIST;
                     }
                     break;
+                    
                 case NPD6LISTADDR:
                     if (build_addr( righttoken, &listEntry) )
                     {
@@ -270,7 +279,6 @@ int readConfig(char *configFileName)
         flog(LOG_ERR, "failed to convert interface specified to a link-level address.");
         return 1;
     }
-
 
     return 0;
 }

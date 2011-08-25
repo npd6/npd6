@@ -72,9 +72,6 @@ int main(int argc, char *argv[])
     naRouter = 1;
     maxHops = MAXMAXHOPS;
 
-    //pname = ((pname=strrchr(argv[0],'/')) != NULL)?pname+1:argv[0];
-    //paramName = ((paramName=strrchr(argv[0],'/')) != NULL)?paramName+1:argv[0];
-
     /* Parse the args */
     while ((c = getopt_long(argc, argv, OPTIONS_STR, prog_opt, NULL)) > 0)
     {
@@ -161,7 +158,6 @@ int main(int argc, char *argv[])
     signal(SIGINT, usersignal);
     signal(SIGTERM, usersignal);    // Typically used by init.d scripts
 
-
     /* And off we go... */
     dispatcher();
 
@@ -188,7 +184,8 @@ void dispatcher(void)
     {
         rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);
 
-        if (rc > 0) {
+        if (rc > 0)
+        {
             if (   fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)
                 || fds[1].revents & (POLLERR | POLLHUP | POLLNVAL) )
             {
@@ -199,7 +196,8 @@ void dispatcher(void)
                 // Allow a moment for things to maybe return to normal...
                 sleep(1);
                 err = init_sockets();
-                if (err) {
+                if (err)
+                {
                     flog(LOG_ERR, "init_sockets: failed to reinitialise one or both sockets.");
                     exit(1);
                 }                

@@ -94,7 +94,6 @@ int open_packet_socket(void)
     }
     flog(LOG_DEBUG2, "setsockopt(SO_ATTACH_FILTER) OK");
 
-
     return sock;
 }
 
@@ -132,7 +131,6 @@ int open_icmpv6_socket(void)
     }
     flog(LOG_DEBUG2, "setsockopt(IPV6_UNICAST_HOPS = %d) OK", maxHops);
 
-    
     return sock;
 }
 
@@ -195,14 +193,12 @@ int get_rx(unsigned char *msg)
         return -1;
     }
     
-
     if (len < 0)
     {
         if (errno != EINTR)
             flog(LOG_ERR, "recvmsg failed with: %s", strerror(errno));
         return -1;
     }
-
 
     return len;
 }
@@ -224,6 +220,9 @@ int get_rx(unsigned char *msg)
  *
  * Return:
  *  void
+ * 
+ * Notes:
+ *  Miserere mihi peccatori.
  */
 void if_allmulti(char *ifname, unsigned int state)
 {
@@ -249,7 +248,7 @@ void if_allmulti(char *ifname, unsigned int state)
         {
             // Already set
             flog(LOG_DEBUG, "Not required, was set at startup anyway.");
-            goto tidyexit;;
+            goto sinfulexit;;
         }
     }
     else
@@ -260,7 +259,7 @@ void if_allmulti(char *ifname, unsigned int state)
         {
             // Was originally set - so leave it
             flog(LOG_DEBUG, "Not required, was set at startup anyway.");
-            goto tidyexit;;
+            goto sinfulexit;;
         }
         // else unset it
         ifr.ifr_flags &= ~IFF_ALLMULTI;
@@ -272,7 +271,7 @@ void if_allmulti(char *ifname, unsigned int state)
         exit(1);
     }
 
-tidyexit:
+sinfulexit:
     close(skfd);
     return;
 }

@@ -55,6 +55,10 @@ e.g.
 
 to supply the list of addresses to be either white- or black-listed.
 
+Note that this config item must be before the
+.B addrlist
+items in the config file.
+
 .B Behaviour with no black- or whitelisting
 
 This is the default mode of oepration and likelt what most people will want. In this mode (the original mode before this feature was introduced) any Neighbor Solicitation received with a target address which matches the prefix will be answered by an appropriate Neighbor Advertisement, irrespective of whether or not that target actually exists and/or is reachable from here.
