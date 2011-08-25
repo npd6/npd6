@@ -34,6 +34,39 @@ It will typically be one of the ethernet interfaces, e.g.
 .RE
 .RE
 
+.BR "listtype = " "[none|black|white]"
+.RS
+This defines the type of "listing" (if any) to be performed: whitelisting, blacklisting or none at all.
+
+If
+.B black
+or
+.B white
+is specified then you should also then define at least 1 (and as many more as you require) config items of the form
+
+.RS
+.B addrlist =
+<ipv6 address>
+
+e.g.
+.B addrlist = 2a01:0123:456:7::22
+(All the usual formats are supported.)
+.RE
+
+to supply the list of addresses to be either white- or black-listed.
+
+.B Behaviour with no black- or whitelisting
+
+This is the default mode of oepration and likelt what most people will want. In this mode (the original mode before this feature was introduced) any Neighbor Solicitation received with a target address which matches the prefix will be answered by an appropriate Neighbor Advertisement, irrespective of whether or not that target actually exists and/or is reachable from here.
+
+.B Behaviour with blacklisting
+
+This mode of operation modifies how npd6 behaves: when a Neighbor Solicitation is received with a prefix which matches that configured, before a Neighbor Advertisement is generated in reply the target is additionally checked against the list of addresses defined. If it matches one of those addresses then the Neighbor Solicitation is silently ignored and no response generated.
+
+.B Behaviour with whitelisting
+
+This mode of operation modifies how npd6 behaves: when a Neighbor Solicitation is received with a prefix which matches that configured, before a Neighbor Advertisement is generated in reply the target is additionally checked against the list of addresses defined. Only if it matches one of those addresses is a Neighbor Solicitation is generated in response.
+.RE
 
 
 .SS Special parameters
