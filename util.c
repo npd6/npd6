@@ -44,8 +44,7 @@
  */
 void usersignal(int mysig)
 {
-    switch(mysig)
-    {
+    switch(mysig) {
         case SIGUSR1:
             signal(SIGUSR1, usersignal);
             flog(LOG_DEBUG, "called with USR1");
@@ -106,14 +105,14 @@ void usersignal(int mysig)
  *
  * Notes:
  *      This will be called from the macro expansion of "flog()"
+ *      This gets called a lot, but much of the time only does
+ *      anything if the debug options are turned on. Hence it's
+ *      written in a slightly odd manner to avoid data allocation
+ *      or work unless we have debug turned on of it's a non-debug
+ *      call.
  */
 int npd6log(const char *function, int pri, char *format, ...)
 {
-    time_t now;
-    struct tm *timenow;
-    char timestamp[128], obuff[2048];
-    va_list param;
-
     // Pick up debug requests and decide if we are logging them
     if (!debug && pri>=LOG_DEBUG)
     {
@@ -131,27 +130,36 @@ int npd6log(const char *function, int pri, char *format, ...)
     {
         pri=LOG_DEBUG;  // Since only we understand the two levels
     }
-    
-    va_start(param, format);
-    vsnprintf(obuff, sizeof(obuff), format, param);
-    now = time(NULL);
-    timenow = localtime(&now);
-    (void) strftime(timestamp, sizeof(timestamp), LOGTIMEFORMAT, timenow);
 
-    if (logging == USE_FILE)
+    // Artificial blocking of code to improve efficiency...
     {
-        fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
-        fflush(logFileFD);
-    }
-
-    if (logging == USE_SYSLOG)
-    {
-        syslog(pri, "%s: %s\n", function, obuff);
-    }
+        time_t now;
+        struct tm *timenow;
+        char timestamp[128], obuff[2048];
+        va_list param;
     
-    va_end(param);
+        va_start(param, format);
+        vsnprintf(obuff, sizeof(obuff), format, param);
+        now = time(NULL);
+        timenow = localtime(&now);
+        (void) strftime(timestamp, sizeof(timestamp), LOGTIMEFORMAT, timenow);
 
-    return 0;
+        if (logging == USE_FILE)
+        {
+            fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
+            // Not now requried - we set linebuffering when opened
+            //fflush(logFileFD);
+        }
+
+        if (logging == USE_SYSLOG)
+        {
+            syslog(pri, "%s: %s\n", function, obuff);
+        }
+
+        va_end(param);
+
+        return 0;
+    }
 }
 
 
@@ -209,17 +217,11 @@ int build_addr(char *str, struct in6_addr *addr)
     flog(LOG_DEBUG2, "called with address %s", str);
     ret = inet_pton(AF_INET6, str, (void *)addr);
     if (ret == 1)
-    {
         flog(LOG_DEBUG2, "inet_pton OK");
-    }
-    else if (ret == 0)
-    {
+    else if(ret == 0)
         flog(LOG_ERR, "invalid input address");
-    }
     else
-    {
         flog(LOG_ERR, "inet_pton: %s", strerror(errno));
-    }
 
     return ret;
 }
@@ -251,8 +253,7 @@ void print_addr16(const struct in6_addr * addr, char * str)
                  (int)addr->s6_addr[8], (int)addr->s6_addr[9],
                  (int)addr->s6_addr[10], (int)addr->s6_addr[11],
                  (int)addr->s6_addr[12], (int)addr->s6_addr[13],
-                 (int)addr->s6_addr[14], (int)addr->s6_addr[15]
-          );
+                 (int)addr->s6_addr[14], (int)addr->s6_addr[15]);
 }
 
 
@@ -305,8 +306,7 @@ int prefixset(char px[])
     }
 
     len = strlen(px);
-    switch (len)
-    {
+    switch (len) {
         case 5:
             strcat(px, "0000:0000:0000:0000:0000:0000:0000");
             return 16;
@@ -399,9 +399,7 @@ void dumpHex(unsigned char *data, unsigned int len)
     printf("Dumping %d bytes of hex:\n>>>>>", len);
     
     for(ix=0; ix < len; ix++)
-    {
         printf("%02x", data[ix]);
-    }
     printf("<<<<<\n");
 }
 
@@ -422,28 +420,26 @@ void dumpHex(unsigned char *data, unsigned int len)
  *  0 is successful,
  *  1 if error.
  */
-int getLinkaddress( char * iface, unsigned char * link)
-{
+int getLinkaddress( char * iface, unsigned char * link) {
     int sockfd, io;
     struct ifreq ifr;
 
     strncpy( ifr.ifr_name, iface, INTERFACE_STRLEN );
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(sockfd < 0)
-    {
+    if(sockfd < 0) {
         flog(LOG_ERR, "failed to open a test SOCK_STREAM.");
         return 1;
     }
 
     io = ioctl(sockfd, SIOCGIFHWADDR, (char *)&ifr);
-    if(io < 0)
-    {
+    if(io < 0) {
         flog(LOG_ERR, "octl failed to obtain link address");
         return 1;
     }
 
     memcpy(link, (unsigned char *)ifr.ifr_ifru.ifru_hwaddr.sa_data, 6);
+
     close(sockfd);
 
     return 0;
@@ -462,6 +458,9 @@ int openLog(char *logFileName)
             fprintf(stderr, "Can't open %s: %s\n", logFileName, strerror(errno));
             return (-1);
         }
+        // Set line-buffering so we don't need to explicitly fflush()
+        // when we write via npd6log
+        setlinebuf(logFileFD);
         return 0;
     }
 
@@ -633,18 +632,12 @@ int tCompare(const void *pa, const void *pb)
         pbI = ((struct in6_addr *)pb)->s6_addr[idx];
 
         if (paI == pbI)
-        {
             continue;
-        }
         if (paI < pbI)
-        {
             return -1;
-        }
         else
-        {
             return 1;
-        }
-    }
+    };
     
     // If we reach here, the items were identical
     return 0;
@@ -669,12 +662,10 @@ void tDump(const void *nodep, const VISIT which, const int depth)
     struct in6_addr *data;
     char addressString[INET6_ADDRSTRLEN];
 
-    switch (which)
-    {
+    switch (which) {
         case preorder:
         case endorder:
             break;
-            
         case postorder:
         case leaf:
             data = *(struct in6_addr **) nodep;

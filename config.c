@@ -90,8 +90,7 @@ int readConfig(char *configFileName)
             // If config params are being added, it should only be required
             // to update the strings in npd6config.h and then insert a
             // case XXXXXXX: here with self-contined code inside.
-            switch (strIdx)
-            {
+            switch (strIdx) {
                 case NOMATCH:
                     flog(LOG_DEBUG2, "Found noise in config file. Skipping.");
                     continue;
@@ -101,7 +100,7 @@ int readConfig(char *configFileName)
                     flog(LOG_DEBUG, "Raw prefix: %s", prefixaddrstr);
                     // We need to pad it up and record the length in bits
                     prefixaddrlen = prefixset(prefixaddrstr);
-                    flog(LOG_DEBUG, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
+                    flog(LOG_INFO, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
                     // Build a binary image of it
                     build_addr(prefixaddrstr, &prefixaddr);
                     break;
@@ -113,18 +112,18 @@ int readConfig(char *configFileName)
                         return 1;
                     }
                     strncpy( interfacestr, righttoken, sizeof(interfacestr));
-                    flog(LOG_DEBUG, "Supplied interface is %s", interfacestr);
+                    flog(LOG_INFO, "Supplied interface is %s", interfacestr);
                     break;
 
                 case NPD6OPTFLAG:
                     if ( !strcmp( righttoken, SET ) )
                     {
-                        flog(LOG_DEBUG, "linkOption flag SET");
+                        flog(LOG_INFO, "linkOption flag SET");
                         naLinkOptFlag = 1;
                     }
                     else if ( !strcmp( righttoken, UNSET ) )
                     {
-                        flog(LOG_DEBUG, "linkOption flag UNSET");
+                        flog(LOG_INFO, "linkOption flag UNSET");
                         naLinkOptFlag = 0;
                     }
                     else
@@ -137,12 +136,12 @@ int readConfig(char *configFileName)
                 case NPD6LOCALIG:
                     if ( !strcmp( righttoken, SET ) )
                     {
-                        flog(LOG_DEBUG, "ignoreLocal flag SET");
+                        flog(LOG_INFO, "ignoreLocal flag SET");
                         nsIgnoreLocal = 1;
                     }
                     else if ( !strcmp( righttoken, UNSET ) )
                     {
-                        flog(LOG_DEBUG, "ignoreLocal flag UNSET");
+                        flog(LOG_INFO, "ignoreLocal flag UNSET");
                         nsIgnoreLocal = 0;
                     }
                     else
@@ -155,12 +154,12 @@ int readConfig(char *configFileName)
                 case NPD6ROUTERNA:
                     if ( !strcmp( righttoken, SET ) )
                     {
-                        flog(LOG_DEBUG, "routerNA flag SET");
+                        flog(LOG_INFO, "routerNA flag SET");
                         naRouter = 1;
                     }
                     else if ( !strcmp( righttoken, UNSET ) )
                     {
-                        flog(LOG_DEBUG, "routerNA flag UNSET");
+                        flog(LOG_INFO, "routerNA flag UNSET");
                         naRouter = 0;
                     }
                     else
@@ -181,7 +180,7 @@ int readConfig(char *configFileName)
                     }
                     else
                     {
-                        flog(LOG_DEBUG, "maxHops set to %d", maxHops);
+                        flog(LOG_INFO, "maxHops set to %d", maxHops);
                     }
                     break;
                     
@@ -205,30 +204,23 @@ int readConfig(char *configFileName)
                     }
                     else
                     {
-                        flog(LOG_DEBUG, "collectTargets set to %d", collectTargets);
+                        flog(LOG_INFO, "collectTargets set to %d", collectTargets);
                     }
                     break;
-                    
                 case NPD6LISTTYPE:
-                    // Zap the list if it already exists and we are thus re-reading
-                    // the config.
-                    if (lRoot != NULL)
-                    {
-                        tdestroy(lRoot, free);
-                    }
                     if ( !strcmp( righttoken, NPD6NONE ) )
                     {
-                        flog(LOG_DEBUG, "List-type = NONE");
+                        flog(LOG_INFO, "List-type = NONE");
                         listType = NOLIST;
                     }
                     else if ( !strcmp( righttoken, NPD6BLACK ) )
                     {
-                        flog(LOG_DEBUG, "List-type = BLACK");
+                        flog(LOG_INFO, "List-type = BLACK");
                         listType = BLACKLIST;
                     }
                     else if( !strcmp( righttoken, NPD6WHITE ) )
                     {
-                        flog(LOG_DEBUG, "List-type = WHITE");
+                        flog(LOG_INFO, "List-type = WHITE");
                         listType = WHITELIST;
                     }
                     else
@@ -237,7 +229,6 @@ int readConfig(char *configFileName)
                         listType = NOLIST;
                     }
                     break;
-                    
                 case NPD6LISTADDR:
                     if (build_addr( righttoken, &listEntry) )
                     {
@@ -279,6 +270,7 @@ int readConfig(char *configFileName)
         flog(LOG_ERR, "failed to convert interface specified to a link-level address.");
         return 1;
     }
+
 
     return 0;
 }

@@ -58,6 +58,7 @@ void processNS( unsigned char *msg,
     char                        prefixaddr_str[INET6_ADDRSTRLEN];
     char                        srcaddr_str[INET6_ADDRSTRLEN];
     char                        dstaddr_str[INET6_ADDRSTRLEN];
+
     // Offsets into the received packet
     struct ip6_hdr              *ip6h =
         (struct ip6_hdr *)(msg + ETH_HLEN);
@@ -65,11 +66,13 @@ void processNS( unsigned char *msg,
         (struct icmp6_hdr *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
     struct nd_neighbor_solicit  *ns =
         (struct nd_neighbor_solicit *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
+
     // Extracted from the received packet
     struct in6_addr             *srcaddr;
     struct in6_addr             *dstaddr;
     struct in6_addr             *targetaddr;
     unsigned int                multicastNS;
+    
     // For outgoing NA
     struct in6_addr             srcLinkAddr = IN6ADDR_ANY_INIT;
     struct in6_pktinfo          *pkt_info;
@@ -85,6 +88,7 @@ void processNS( unsigned char *msg,
     struct nd_opt_hdr           *opthdr;
     void                        *optdata;
     
+
     // Validate ICMP packet type, to ensure filter was correct
     // In theory not required, as the filter CAN'T be wrong...!
     if ( icmph->icmp6_type == ND_NEIGHBOR_SOLICIT )
@@ -112,11 +116,12 @@ void processNS( unsigned char *msg,
     if ( IN6_IS_ADDR_MULTICAST(dstaddr) )
     {
         // This was a multicast NS
+        flog(LOG_DEBUG2, "Multicast NS");
         multicastNS = 1;
-    }
-    else
+    }else
     {
         // This was a unicast NS
+        flog(LOG_DEBUG2, "Unicast NS");
         multicastNS=0;
     }
 
@@ -139,8 +144,7 @@ void processNS( unsigned char *msg,
     }
 
     // Check for black or white listing compliance
-    switch (listType)
-    {
+    switch (listType) {
         case NOLIST:
             flog(LOG_DEBUG2, "Neither white nor black listing in operation.");
             break;
@@ -231,8 +235,7 @@ void processNS( unsigned char *msg,
             iovlen = sizeof(struct nd_neighbor_advert) + sizeof(struct nd_opt_hdr) + ETH_ALEN;
             iov.iov_len = iovlen;
             iov.iov_base = (caddr_t) nabuff;
-        }
-        else
+        } else
         {
             // The NS was unicast AND the config option was unset.
             // Build the io vector
@@ -269,7 +272,8 @@ void processNS( unsigned char *msg,
         if (err < 0)
             flog(LOG_ERR, "sendmsg returned with error %d = %s", errno, strerror(errno));
         else
-            flog(LOG_DEBUG2, "sendmsg completed OK");        
+            flog(LOG_DEBUG2, "sendmsg completed OK");
+        
     }
 }
 
