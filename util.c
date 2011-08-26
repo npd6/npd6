@@ -481,7 +481,7 @@ void showVersion(void)
 {
     printf("Beta version, so showing SVN version id for this file:\n");
     printf("Version $Revision$\n");
-    printf("Tagged version ID is >= 0.3\n");
+    printf("Tagged version ID is >= 0.4.3\n");
 }
 
 
