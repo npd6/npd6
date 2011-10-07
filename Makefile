@@ -22,7 +22,9 @@
 # $HeadURL$
 
 CC=gcc
+#CC=gcc-3.4
 CFLAGS=-c -Wall -g -O3
+#LDFLAGS=-L ./gcc34
 LDFLAGS=
 SOURCES=main.c icmp6.c util.c ip6.c config.c
 OBJECTS=$(SOURCES:.c=.o)

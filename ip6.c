@@ -110,6 +110,13 @@ void processNS( unsigned char *msg,
         return;
     }
 
+    // Bug 27 - Handle DAD NS as per RFC4862, 5.4.3
+    if ( IN6_IS_ADDR_UNSPECIFIED(srcaddr) )
+    { 
+        flog(LOG_DEBUG, "Unspecified src addr - DAD activity. Ignoring NS.");
+        return;
+    }
+        
     // Based upon the dstaddr, record if this was a unicast or multicast NS.
     // If unicast, we'll use that later when we decide whether to add the
     // target link-layer option to any outgoing NA.
