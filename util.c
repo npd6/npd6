@@ -99,7 +99,7 @@ void usersignal(int mysig)
  *
  * Outputs:
  *  Via fprintf to the log file.
- * 
+ *
  * Return:
  *      0 on success
  *
@@ -131,29 +131,32 @@ int npd6log(const char *function, int pri, char *format, ...)
         pri=LOG_DEBUG;  // Since only we understand the two levels
     }
 
-    // Artificial blocking of code to improve efficiency...
+    // Artificial blocking of code to improve efficiency... if the compiler plays ball. :-)
     {
         time_t now;
         struct tm *timenow;
         char timestamp[128], obuff[2048];
         va_list param;
-    
+
         va_start(param, format);
         vsnprintf(obuff, sizeof(obuff), format, param);
         now = time(NULL);
         timenow = localtime(&now);
         (void) strftime(timestamp, sizeof(timestamp), LOGTIMEFORMAT, timenow);
 
-        if (logging == USE_FILE)
-        {
-            fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
-            // Not now requried - we set linebuffering when opened
-            //fflush(logFileFD);
-        }
-
-        if (logging == USE_SYSLOG)
-        {
-            syslog(pri, "%s: %s\n", function, obuff);
+        switch (logging) {
+            case USE_FILE:
+                fprintf(logFileFD, "[%s] %s: %s\n", timestamp, function, obuff);
+                break;
+            case USE_SYSLOG:
+                syslog(pri, "%s: %s\n", function, obuff);
+                break;
+            case USE_STD:
+                if (pri <= LOG_ERR)
+                    fprintf(stderr, "[%s] %s: %s\n", timestamp, function, obuff);
+                else
+                    fprintf(stdout, "[%s] %s: %s\n", timestamp, function, obuff);
+                break;
         }
 
         va_end(param);
@@ -244,7 +247,7 @@ int build_addr(char *str, struct in6_addr *addr)
  *      void
  */
 void print_addr16(const struct in6_addr * addr, char * str)
-{    
+{
    sprintf(str, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
                  (int)addr->s6_addr[0], (int)addr->s6_addr[1],
                  (int)addr->s6_addr[2], (int)addr->s6_addr[3],
@@ -280,7 +283,7 @@ int prefixset(char px[])
 {
     size_t len;
     int missing, c1, c2;
-    
+
     // First we must ensure fully padded with leading 0s
     for(c1=0; c1<INET6_ADDRSTRLEN; c1+=5 )
     {
@@ -385,7 +388,7 @@ void stripwhitespace(char *str)
  *      Lump of data
  *  unsigned int len
  *      Amount of data
- * 
+ *
  * Outputs:
  *  Via printf to stdio
  *
@@ -397,7 +400,7 @@ void dumpHex(unsigned char *data, unsigned int len)
     int ix;
 
     printf("Dumping %d bytes of hex:\n>>>>>", len);
-    
+
     for(ix=0; ix < len; ix++)
         printf("%02x", data[ix]);
     printf("<<<<<\n");
@@ -521,7 +524,7 @@ void dumpAddressData(void)
         flog(LOG_INFO, "Not dumping collected addresses - feature disabled via config.");
         return;
     }
-    
+
     flog(LOG_INFO, "====================================");
     flog(LOG_INFO, "Dumping list of targets seen so far:");
     flog(LOG_INFO, "------------------------------------");
@@ -532,7 +535,7 @@ void dumpAddressData(void)
     {
         flog(LOG_INFO, "(reached the configured limit - there were maybe more.)");
     }
-    
+
     flog(LOG_INFO, "Total unique targets seen: %d", tEntries);
     flog(LOG_INFO, "====================================");
 }
@@ -597,7 +600,7 @@ void storeTarget(struct in6_addr *newTarget)
 
 /*****************************************************************************
  * tCompare
- *  This is the compare fn used by the tree handler. 
+ *  This is the compare fn used by the tree handler.
  *
  * Inputs:
  *  The two generic pointers are struct in6_addr *.
@@ -607,7 +610,7 @@ void storeTarget(struct in6_addr *newTarget)
  *
  * Return:
  *  0 if item already present, 1 if it was new.
- * 
+ *
  * Notes:
  * Need to compare two 128 bit numbers! Yucky.
  * On 64-bit, we could assume long int => 64 bit, but
@@ -638,7 +641,7 @@ int tCompare(const void *pa, const void *pb)
         else
             return 1;
     };
-    
+
     // If we reach here, the items were identical
     return 0;
 }

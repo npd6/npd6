@@ -33,7 +33,7 @@ char usage_str[] =
 "  -D, --debug2           Sets full debug level. (Lots!)\n"
 "  -f, --foreground       Run in foreground, otherwise daemonize.\n"
 "  -h, --help             Show this help screen.\n"
-"  -l  --logfile=PATH     Sets the log file, else default to syslog.\n"
+"  -l  --logfile=PATH     Sets the log file, else default to syslog. If \"-l -\" then stdout/stderr used.\n"
 "  -v, --version          Print the version and quit.\n"
 };
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     {
         if (c==-1)
             break;
-        
+
         switch (c) {
         case 'c':
             strcpy(configfile, optarg);
@@ -108,15 +108,18 @@ int main(int argc, char *argv[])
     /* Sort out where to log */
     if ( strlen(logfile) )
     {
-        logging = USE_FILE;
+        if (strlen(logfile) == 1 && (logfile[0]='-')  )
+            logging = USE_STD;
+        else
+            logging = USE_FILE;
     }
     else
     {
         logging = USE_SYSLOG;
     }
-    
+
     /* Open the log and config*/
-    if (openLog(logfile) < 0)
+    if ( (logging == USE_FILE) && (openLog(logfile) < 0)  )
     {
         printf("Exiting. Error in setting up logging correctly.\n");
         exit (1);
@@ -128,7 +131,7 @@ int main(int argc, char *argv[])
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
     }
-    
+
     flog(LOG_INFO, "Using normalised prefix %s/%d", prefixaddrstr, prefixaddrlen);
     flog(LOG_DEBUG2, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
 
@@ -137,7 +140,7 @@ int main(int argc, char *argv[])
         flog(LOG_ERR, "init_sockets: failed to initialise one or both sockets.");
         exit(1);
     }
-    
+
     /* Set allmulti on the interface */
     if_allmulti(interfacestr, TRUE);
 
@@ -150,7 +153,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-    
+
     /* Set up signal handlers */
     signal(SIGUSR1, usersignal);
     signal(SIGUSR2, usersignal);
@@ -200,7 +203,7 @@ void dispatcher(void)
                 {
                     flog(LOG_ERR, "init_sockets: failed to reinitialise one or both sockets.");
                     exit(1);
-                }                
+                }
                 memset(fds, 0, sizeof(fds));
                 fds[0].fd = sockpkt;
                 fds[0].events = POLLIN;

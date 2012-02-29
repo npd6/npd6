@@ -101,6 +101,11 @@ int readConfig(char *configFileName)
                     // We need to pad it up and record the length in bits
                     prefixaddrlen = prefixset(prefixaddrstr);
                     flog(LOG_INFO, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
+                    if ( prefixaddrlen <= 0 )
+                    {
+                        flog(LOG_ERR, "Invalid prefix.");
+                        return 1;
+                    }
                     // Build a binary image of it
                     build_addr(prefixaddrstr, &prefixaddr);
                     break;
@@ -183,7 +188,7 @@ int readConfig(char *configFileName)
                         flog(LOG_INFO, "maxHops set to %d", maxHops);
                     }
                     break;
-                    
+
                 case NPD6TARGETS:
                     // If we arrive here and the tRoot tree already exists,
                     // then we're re-reading the config and so need to zap
@@ -244,7 +249,7 @@ int readConfig(char *configFileName)
     } while (len);
 
 
-    
+
     // Now do some final checks to ensure all required params were supplied
     if ( ! strcmp(prefixaddrstr, NULLSTR) )
     {

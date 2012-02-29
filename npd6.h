@@ -58,6 +58,7 @@
 #define LOG_DEBUG2          8
 #define USE_FILE            1
 #define USE_SYSLOG          2
+#define USE_STD             3
 #define MAXTARGETS          1000000         // Ultimate sane limit
 
 //*****************************************************************************
@@ -83,7 +84,7 @@ unsigned char   linkAddr[6];
 // Regarding the target prefix being matched
 char            prefixaddrstr[INET6_ADDRSTRLEN];
 struct          in6_addr prefixaddr;
-unsigned int    prefixaddrlen;
+int             prefixaddrlen;
 
 // Key behaviour
 int             naLinkOptFlag;      // From config file NPD6OPTFLAG
