@@ -45,9 +45,13 @@ clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
 
 install: all
-	cp etc/npd6 /etc/init.d/npd6
-	cp etc/npd6.conf /etc/npd6.conf.sample
-	cp npd6 $(INSTALL_PREFIX)/bin/
-	cp man/npd6.conf.5.gz $(MAN_PREFIX)/man5/
-	cp man/npd6.8.gz $(MAN_PREFIX)/man8/
-
+	mkdir -p $(DESTDIR)/etc/init.d/
+	mkdir -p $(DESTDIR)/etc/
+	mkdir -p $(DESTDIR)$(INSTALL_PREFIX)/bin/
+	mkdir -p $(DESTDIR)$(MAN_PREFIX)/man5/
+	mkdir -p $(DESTDIR)$(MAN_PREFIX)/man8/
+	cp etc/npd6 $(DESTDIR)/etc/init.d/npd6
+	cp etc/npd6.conf $(DESTDIR)/etc/npd6.conf.sample
+	cp npd6 $(DESTDIR)$(INSTALL_PREFIX)/bin/
+	cp man/npd6.conf.5.gz $(DESTDIR)$(MAN_PREFIX)/man5/
+	cp man/npd6.8.gz $(DESTDIR)$(MAN_PREFIX)/man8/
