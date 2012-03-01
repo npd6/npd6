@@ -22,9 +22,7 @@
 # $HeadURL$
 
 CC=gcc
-#CC=gcc-3.4
 CFLAGS=-c -Wall -g -O3
-#LDFLAGS=-L ./gcc34
 LDFLAGS=
 SOURCES=main.c icmp6.c util.c ip6.c config.c
 OBJECTS=$(SOURCES:.c=.o)
@@ -32,6 +30,7 @@ HEADERS=includes.h npd6.h
 EXECUTABLE=npd6
 INSTALL_PREFIX=/usr/local
 MAN_PREFIX=/usr/share/man
+DEBIAN=debian/
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -44,9 +43,14 @@ $(EXECUTABLE): $(OBJECTS)
 clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
 
+distclean:
+	rm -rf $(OBJECTS) $(EXECUTABLE)
+	rm -rf debian/etc/
+	rm -rf debian/usr/
+	rm npd6*.deb
+
 install: all
 	mkdir -p $(DESTDIR)/etc/init.d/
-	mkdir -p $(DESTDIR)/etc/
 	mkdir -p $(DESTDIR)$(INSTALL_PREFIX)/bin/
 	mkdir -p $(DESTDIR)$(MAN_PREFIX)/man5/
 	mkdir -p $(DESTDIR)$(MAN_PREFIX)/man8/
@@ -55,3 +59,15 @@ install: all
 	cp npd6 $(DESTDIR)$(INSTALL_PREFIX)/bin/
 	cp man/npd6.conf.5.gz $(DESTDIR)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DESTDIR)$(MAN_PREFIX)/man8/
+
+debian: all
+	mkdir -p $(DEBIAN)/etc/init.d/
+	mkdir -p $(DEBIAN)$(INSTALL_PREFIX)/bin/
+	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man5/
+	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man8/
+	cp etc/npd6 $(DEBIAN)/etc/init.d/npd6
+	cp etc/npd6.conf $(DEBIAN)/etc/npd6.conf.sample
+	cp npd6 $(DEBIAN)$(INSTALL_PREFIX)/bin/
+	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
+	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
+	dpkg-deb --build debian .
