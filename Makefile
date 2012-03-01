@@ -47,6 +47,7 @@ distclean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
 	rm -rf debian/etc/
 	rm -rf debian/usr/
+	rm -rf debian/DEBIAN/
 	rm npd6*.deb
 
 install: all
@@ -61,12 +62,14 @@ install: all
 	cp man/npd6.8.gz $(DESTDIR)$(MAN_PREFIX)/man8/
 
 debian: all
+	mkdir $(DEBIAN)/DEBIAN/
+	cp $(DEBIAN)/c* $(DEBIAN)/DEBIAN/
 	mkdir -p $(DEBIAN)/etc/init.d/
 	mkdir -p $(DEBIAN)$(INSTALL_PREFIX)/bin/
 	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man5/
 	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man8/
 	cp etc/npd6 $(DEBIAN)/etc/init.d/npd6
-	cp etc/npd6.conf $(DEBIAN)/etc/npd6.conf.sample
+	cp etc/npd6.conf $(DEBIAN)/etc/npd6.conf
 	cp npd6 $(DEBIAN)$(INSTALL_PREFIX)/bin/
 	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
