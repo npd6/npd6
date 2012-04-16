@@ -345,6 +345,7 @@ int prefixset(char px[])
 /*****************************************************************************
  * stripwhitespace
  *  Tidy up lines of text from the config file.
+ * BUG 32 - Rewite. original had v ugly bug...
  *
  * Inputs:
  *  char * str
@@ -358,22 +359,17 @@ int prefixset(char px[])
  */
 void stripwhitespace(char *str)
 {
-    int i = 0;
-    char *ptr = str;
+    char *p1 = str;
+    char *p2 = str;
 
-    for(i = 0; i < strlen(str) || *ptr == '\0'; )
-    {
-        if( (*ptr == ' ') || (*ptr == '\n') )
-        {
-            strcpy(ptr, ptr + 1);
-            continue;
-        }
+    p1=str;
+    while(*p1 != 0) {
+        if(isspace(*p1))
+            ++p1;
         else
-        {
-            i++;
-            ptr++;
-        }
+            *p2++ = *p1++;
     }
+    *p2=0;
 }
 
 
