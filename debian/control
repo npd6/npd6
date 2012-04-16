@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Sean Groarke npd6project@gmail.com
 Homepage: http://code.google.com/p/npd6/
 Package: npd6
-Version: 0.4.5
+Version: 0.4.6
 Architecture: amd64
 Depends: libc6 (>=2.4)
 Description: IPv6 neighbor proxy daemon

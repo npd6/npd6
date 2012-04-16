@@ -56,9 +56,7 @@ int readConfig(char *configFileName)
         if (fgets(linein, 128, configFileFD) == NULL)
             break;
         // Tidy it up
-printf("Raw linein: %s\n", linein);
             stripwhitespace(linein);
-printf("Tidied linein: %s\n", linein);
             // Special mega-hacky thing for blank lines:
             len = strlen(linein);
             if (len==0)
