@@ -560,6 +560,7 @@ void storeTarget(struct in6_addr *newTarget)
     if (!ptr)
     {
         flog(LOG_ERR, "Malloc failed. Ignoring.");
+	return;
     }
     memcpy(ptr, newTarget, sizeof(struct in6_addr) );
 
@@ -696,6 +697,7 @@ void storeListEntry(struct in6_addr *newEntry)
     if (!ptr)
     {
         flog(LOG_ERR, "Malloc failed. Ignoring.");
+	return;
     }
     memcpy(ptr, newEntry, sizeof(struct in6_addr) );
 
