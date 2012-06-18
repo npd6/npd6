@@ -1,6 +1,6 @@
 .\" Manpage for npd6.conf
 .\" Contact sgroarke@gmail.com to correct errors or typos.
-.TH man 4 "07 August 2011" "0.4.1" "npd6.conf man page"
+.TH man 5 "07 August 2011" "0.4.1" "npd6.conf man page"
 .SH NAME
 npd6.conf \- configuration file for neighbor proxy daemon ipv6 npd6
 

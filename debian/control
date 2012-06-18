@@ -1,10 +1,13 @@
-Section: Networking
+Source: npd6
+Section: net
 Priority: optional
-Maintainer: Sean Groarke npd6project@gmail.com
+Maintainer: Sean Groarke <npd6project@gmail.com>
+Build-Depends: cdbs (>= 0.4.51), cmake (>= 2.6.3), debhelper (>= 6)
 Homepage: http://code.google.com/p/npd6/
 Package: npd6
-Version: 0.4.6
+Version: 0.5.0
 Architecture: amd64
 Depends: libc6 (>=2.4)
 Description: IPv6 neighbor proxy daemon
- Provides a proxy service to respond to neighbor solicitations requests for a pre-defined IPv6 subnet.
+ Provides a proxy service to respond to neighbor solicitations requests for a
+ pre-defined IPv6 subnet.
