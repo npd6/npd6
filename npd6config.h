@@ -32,8 +32,9 @@
 #define NPD6TARGETS     6
 #define NPD6LISTTYPE    7
 #define NPD6LISTADDR    8
+#define NPD6EXPRADDR    9
 
-#define CONFIGTOTAL     9
+#define CONFIGTOTAL     10
 #define NOMATCH         -1
 char *configStrs[CONFIGTOTAL] =
 {
@@ -45,7 +46,8 @@ char *configStrs[CONFIGTOTAL] =
     "maxHops",
     "collectTargets",
     "listtype",
-    "addrlist"
+    "addrlist",
+    "exprlist"
 };
 
 // For logging system

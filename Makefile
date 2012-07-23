@@ -22,9 +22,9 @@
 # $HeadURL$
 
 CC=gcc
-CFLAGS=-c -Wall -g -O3
+CFLAGS=-c -Wall -g -O3 -DINCLUDE_IP_ADDRESS_SUPPORT
 LDFLAGS=
-SOURCES=main.c icmp6.c util.c ip6.c config.c
+SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=includes.h npd6.h
 EXECUTABLE=npd6

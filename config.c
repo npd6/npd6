@@ -26,6 +26,8 @@
 #include "npd6.h"
 #include "npd6config.h"
 
+#include "expintf.h"
+
 //*******************************************************
 // Take supplied filename and open it, then parse the contents.
 // Upon return following set:
@@ -244,6 +246,10 @@ int readConfig(char *configFileName)
                     {
                         flog(LOG_ERR, "Address %s invalid.", righttoken);
                     }
+                    break;
+                case NPD6EXPRADDR:
+		    flog(LOG_DEBUG, "Address expression %s added.", linein);
+                    storeExpression(linein);
                     break;
             }
     } while (len);
