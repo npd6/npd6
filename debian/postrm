@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-if test "$1" = "remove"; then
-  update-rc.d -f npd6 remove
-fi
-
-#DEBHELPER#

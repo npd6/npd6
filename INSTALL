@@ -1,0 +1,10 @@
+Building
+========
+1) Simple building from source is straightforward:
+	make distclean or make clean
+	make
+	make install
+
+2) A full debain package build can be done using:
+	debuild -us -uc
+if you have all the appropriate bits and bobs installed. Which if you're building a DEB you probably do...

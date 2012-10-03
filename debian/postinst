@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-if test "$1" = "configure"; then
-  update-rc.d npd6 defaults
-fi
-
-#DEBHELPER#
