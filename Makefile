@@ -69,7 +69,7 @@ debian: all
 	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man5/
 	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man8/
 	cp etc/npd6 $(DEBIAN)/etc/init.d/npd6
-	cp etc/npd6.conf $(DEBIAN)/etc/npd6.conf
+	cp etc/npd6.conf.sample $(DEBIAN)/etc/npd6.conf.sample
 	cp npd6 $(DEBIAN)$(INSTALL_PREFIX)/bin/
 	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
