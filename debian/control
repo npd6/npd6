@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Sean Groarke <npd6project@gmail.com>
 Build-Depends: cdbs (>= 0.4.51), cmake (>= 2.6.3), debhelper (>= 6), quilt
-Version: 0.5.0
+Version: 0.5.1
 Homepage: http://code.google.com/p/npd6/
 Package: npd6
 Architecture: amd64
