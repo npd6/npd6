@@ -478,9 +478,7 @@ int openLog(char *logFileName)
 // Just display the version and return.
 void showVersion(void)
 {
-    printf("Beta version, so showing SVN version id for this file:\n");
-    printf("Version $Revision$\n");
-    printf("Tagged version ID is >= 0.4.3\n");
+    printf("Version 0.5.1\n");
 }
 
 

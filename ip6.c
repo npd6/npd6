@@ -170,13 +170,13 @@ void processNS( unsigned char *msg,
             // See if the address matches an expression
             if((compareExpression(targetaddr) == 1))
             {
-                flog(LOG_INFO, "NS for blacklisted EXPR address: %s", targetaddr_str);
+                flog(LOG_DEBUG, "NS for blacklisted EXPR address: %s", targetaddr_str);
                 return; // Abandon
             }
             // If active and tgt is in the list, bail.
             if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
-                flog(LOG_INFO, "NS for blacklisted specific addr: %s", targetaddr_str);
+                flog(LOG_DEBUG, "NS for blacklisted specific addr: %s", targetaddr_str);
                 return; //Abandon
             }
             break;
@@ -185,21 +185,21 @@ void processNS( unsigned char *msg,
             // See if the address matches an expression
             if((compareExpression(targetaddr) == 1))
             {
-                flog(LOG_INFO, "NS for whitelisted EXPR: %s", targetaddr_str);
+                flog(LOG_DEBUG, "NS for whitelisted EXPR: %s", targetaddr_str);
               	break;	// Don't check further - we got a hit.
             }
 
             // If active and tgt is NOT in the list (and didn't match an expr above), bail.
             if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
-                flog(LOG_INFO, "NS for specific addr whitelisted: %s", targetaddr_str);
+                flog(LOG_DEBUG, "NS for specific addr whitelisted: %s", targetaddr_str);
                 break;
             }
             else
             {
                 // We have whitelisting in operation but failed to match either type. 
                 // Log it if required.
-                flog(LOG_INFO, "No whitelist match for: %s", targetaddr_str);
+                flog(LOG_DEBUG, "No whitelist match for: %s", targetaddr_str);
                 return;
             }
             break;
