@@ -1,14 +1,8 @@
-npd6 (0.4.6) precise; urgency=low
+npd6 (0.5.2) precise; urgency=low
 
-  * Initial package.
+    * Bug fixes for issue 38 & 40.
 
- -- Sean Groarke <npd6project@gmail.com>  Mon, 21 May 2012 14:30:48 +0200
-
-npd6 (0.5.0) precise; urgency=low
-
-  * Bump version 
-
- -- Craig Miskell <craig@catalyst.net.nz>  Mon, 27 Aug 2012 08:44:59 +1200
+ -- Sean Groarke <npd6project@gmail.com>  Fri, 12 Oct 2012 07:00:00 +0200
 
 npd6 (0.5.1) unstable; urgency=low
 
@@ -16,4 +10,14 @@ npd6 (0.5.1) unstable; urgency=low
 
  -- Sean Groarke <sgroarke@gmail.com>  Wed, 03 Oct 2012 10:37:23 +0200
 
+npd6 (0.5.0) precise; urgency=low
 
+  * Bump version 
+
+ -- Craig Miskell <craig@catalyst.net.nz>  Mon, 27 Aug 2012 08:44:59 +1200
+
+npd6 (0.4.6) precise; urgency=low
+
+  * Initial package.
+
+ -- Sean Groarke <npd6project@gmail.com>  Mon, 21 May 2012 14:30:48 +0200

@@ -7,7 +7,6 @@ Standards-Version: 3.9.2
 Homepage: https://code.google.com/p/npd6/
 
 Package: npd6
-Version: 0.5.1
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libc6 (>=2.4)
 Description: IPv6 neighbor proxy daemon

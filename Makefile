@@ -74,4 +74,5 @@ debian: all
 	cp npd6 $(DEBIAN)$(INSTALL_PREFIX)/bin/
 	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
-	dpkg-deb --build debian .
+	#dpkg-deb --build debian .
+	debuild -us -uc

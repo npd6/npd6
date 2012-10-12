@@ -478,7 +478,8 @@ int openLog(char *logFileName)
 // Just display the version and return.
 void showVersion(void)
 {
-    printf("Version 0.5.1\n");
+    printf("npd6 - version %s\n", VERSIONSTRING);
+    printf("\nCopyright (C) 2011-2012 Sean Groarke\n\n");
 }
 
 

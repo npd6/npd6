@@ -24,6 +24,8 @@
 
 #ifndef NPD6_H
 
+#define	VERSIONSTRING	"0.5.2"
+
 #define NPD6_H
 #include "includes.h"
 
