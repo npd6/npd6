@@ -33,8 +33,9 @@
 #define NPD6LISTTYPE    7
 #define NPD6LISTADDR    8
 #define NPD6EXPRADDR    9
+#define NPD6LISTLOG     10
 
-#define CONFIGTOTAL     10
+#define CONFIGTOTAL     11
 #define NOMATCH         -1
 char *configStrs[CONFIGTOTAL] =
 {
@@ -47,7 +48,8 @@ char *configStrs[CONFIGTOTAL] =
     "collectTargets",
     "listtype",
     "addrlist",
-    "exprlist"
+    "exprlist",
+    "listlogging"
 };
 
 // For logging system
@@ -57,6 +59,9 @@ char *configStrs[CONFIGTOTAL] =
 
 #define SET             "true"
 #define UNSET           "false"
+
+#define ON              "on"
+#define OFF             "off"
 
 #define NPD6NONE        "none"
 #define NPD6BLACK       "black"

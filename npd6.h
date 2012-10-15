@@ -62,7 +62,7 @@
 #define USE_SYSLOG          2
 #define USE_STD             3
 #define MAXTARGETS          1000000         // Ultimate sane limit
-
+#define LISTLOGGING         (listLog==1?LOG_INFO:LOG_DEBUG)
 //*****************************************************************************
 // Globals
 //
@@ -107,6 +107,7 @@ int             listType;
 #define         NOLIST      0
 #define         BLACKLIST   1
 #define         WHITELIST   2
+int             listLog;            // From config file NPD6LISTLOG
 
 
 

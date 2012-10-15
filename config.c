@@ -248,8 +248,25 @@ int readConfig(char *configFileName)
                     }
                     break;
                 case NPD6EXPRADDR:
-		    flog(LOG_DEBUG, "Address expression %s added.", linein);
+                    flog(LOG_DEBUG, "Address expression %s added.", linein);
                     storeExpression(linein);
+                    break;
+                case NPD6LISTLOG:
+                    if ( !strcmp( righttoken, ON ) )
+                    {
+                        flog(LOG_INFO, "listlogging set to ON");
+                        listLog = 1;
+                    }
+                    else if ( !strcmp( righttoken, OFF ) )
+                    {
+                        flog(LOG_INFO, "listlogging set to OFF");
+                        listLog = 0;
+                    }
+                    else
+                    {
+                        flog(LOG_ERR, "listlogging flag - Bad value");
+                        return 1;
+                    }
                     break;
             }
     } while (len);

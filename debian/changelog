@@ -1,3 +1,10 @@
+npd6 (0.6.0) precise; urgency=low
+
+    * Bug fix for issue 42.
+    * Feature fix for issue 43.
+
+ -- Sean Groarke <npd6project@gmail.com>  Mon, 15 Oct 2012 07:00:00 +0200
+
 npd6 (0.5.2) precise; urgency=low
 
     * Bug fixes for issue 38 & 40.

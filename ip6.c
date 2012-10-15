@@ -135,7 +135,7 @@ void processNS( unsigned char *msg,
 
     // Within the NS, who are they looking for?
     targetaddr = (struct in6_addr *)&(ns->nd_ns_target);
-    if (debug)
+    if (debug || listLog)
     {
         print_addr16(targetaddr, targetaddr_str);
         print_addr16(&prefixaddr, prefixaddr_str);
@@ -156,27 +156,18 @@ void processNS( unsigned char *msg,
         case NOLIST:
             flog(LOG_DEBUG2, "Neither white nor black listing in operation.");
             break;
-	
-        // Yes, the default IS meant to be in this position...
-        default:
-            if (!debug)
-            {
-                print_addr16(targetaddr, targetaddr_str);
-            }
-        // Intentional fallthrough here... - do not break...!
-        // Could be rewritten as a macro... I know...
 
         case BLACKLIST:
             // See if the address matches an expression
             if((compareExpression(targetaddr) == 1))
             {
-                flog(LOG_DEBUG, "NS for blacklisted EXPR address: %s", targetaddr_str);
+                flog(LISTLOGGING, "NS for blacklisted EXPR address: %s", targetaddr_str);
                 return; // Abandon
             }
             // If active and tgt is in the list, bail.
             if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
-                flog(LOG_DEBUG, "NS for blacklisted specific addr: %s", targetaddr_str);
+                flog(LISTLOGGING, "NS for blacklisted specific addr: %s", targetaddr_str);
                 return; //Abandon
             }
             break;
@@ -185,14 +176,14 @@ void processNS( unsigned char *msg,
             // See if the address matches an expression
             if((compareExpression(targetaddr) == 1))
             {
-                flog(LOG_DEBUG, "NS for whitelisted EXPR: %s", targetaddr_str);
+                flog(LISTLOGGING, "NS for whitelisted EXPR: %s", targetaddr_str);
               	break;	// Don't check further - we got a hit.
             }
 
             // If active and tgt is NOT in the list (and didn't match an expr above), bail.
             if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
-                flog(LOG_DEBUG, "NS for specific addr whitelisted: %s", targetaddr_str);
+                flog(LISTLOGGING, "NS for specific addr whitelisted: %s", targetaddr_str);
                 break;
             }
             else
