@@ -3,8 +3,10 @@ Building
 1) Simple building from source is straightforward:
 	make distclean or make clean
 	make
-	make install
+	sudo make install
 
-2) A full debain package build can be done using:
-	debuild -us -uc
-if you have all the appropriate bits and bobs installed. Which if you're building a DEB you probably do...
+2) A debian package can be built using
+	make debian 
+however it may be easier to download a pre-built package from the web-site where you got the 
+source code! The debian build has various toolsets required, but odds-on if you're in to
+building debian packages you probably have those already...

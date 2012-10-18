@@ -17,6 +17,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 DESC="npd6 - Neighbor proxy Daemon IPv6"
 NAME=npd6
 DAEMON=/usr/local/bin/$NAME
+# Check man page or --help to get more optional arguments
 #DAEMON_ARGS="--debug -l /var/log/npd6.log"
 DAEMON_ARGS=""
 PIDFILE=/var/run/$NAME.pid
@@ -65,15 +66,6 @@ case "$1" in
   status)
        status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
        ;;
-  #reload|force-reload)
-	#
-	# If do_reload() is not implemented then leave this commented out
-	# and leave 'force-reload' as an alias for 'restart'.
-	#
-	#log_daemon_msg "Reloading $DESC" "$NAME"
-	#do_reload
-	#log_end_msg $?
-	#;;
   restart|force-reload)
 	log_daemon_msg "Restarting $DESC" "$NAME"
         start-stop-daemon --stop --retry=TERM/30/KILL/5 --exec $DAEMON

@@ -1,3 +1,6 @@
+// Please check the man pages for full details of this config file.
+// Below are some examples and suggestions, but the full details are
+// in the man page.
 // npd6 config file
 
 // The prefix portion that we will match on
@@ -13,16 +16,16 @@ interface = eth0
 // be answered with a Neighbor Advertisement. i.e. no blacklisting
 // or whitelisting is performed at all.
 // If 'black', then any NS *except* those entires given, will
-// be answered by a Neighbor Advertisement.
+// be answered by a Neighbor Advertisement (if the prefix matches)
 // If 'white', then *only* NS with a target of one of the
-// entries will be answered by a Neighbor Advertisement.
+// entries will be answered by a Neighbor Advertisement (if the 
+// prefix matches)
 //
-// Most folks will want 'none'...
+// Most folks will want the default, at least to get things going.
 //
-// listtype should be one of 'none', 'white' or 'black'
-// Must also precede the addrlist= items below.
 listtype = none
-//listtype = black
+// listtype = black
+// listtype = white
 //addrlist = 2a01:0123:4567:89aa:aaaa:bbbb:cccc:dddd
 //addrlist = 2a01:123:4567:89aa:dead:beef:dead:beef
 //.
@@ -34,10 +37,11 @@ listtype = none
 // Pattern matching is also supported, via use of
 // exprlist = <expression to match>
 // *Please* check the man page and/or web site for more details
-// on this. It's very powerful but needs a little thought first!
-
+// on this. It's very powerful but needs a little thought first! It's 
+// not just simple regexps.
+//
 // If we're using black or white lists, this controls whether to 
-// log matches or not (if we're not using debug mode, hen they get
+// log matches or not (if we're not using debug mode, then they get
 // logged anyway)
 listlogging = off
 
@@ -47,10 +51,11 @@ listlogging = off
 // Do so at your own risk... No, really: do not change
 // these unless you have a precise understanding of what
 // they do. They can break things in interesting ways....
+//
 
-// Default: 100) Collect target data up to this many targets.
-// Data can be subsequently dumped via a USR2.
-// 0 to disable.
+// (Default: 100) Collect target data up to this many targets.
+// Data can be subsequently log-dumped via a USR2.
+// 0 to disable data collection.
 collectTargets = 100
 
 // (Default: false) Set to 'false' to disable target link-layer option
@@ -61,7 +66,7 @@ linkOption = false
 // we ignore it and let the kernel reply itself
 ignoreLocal = true
 
-// (Default: true) Normally outbound NAs will have ROUTER
+// (Default: true) Normally outbound NAs should have ROUTER
 // flag set.
 routerNA = true
 
