@@ -51,7 +51,8 @@
  *      void
  *
  */
-void processNS( unsigned char *msg,
+void processNS( int ifIndex,
+                unsigned char *msg,
                 unsigned int len)
 {
     // String representations of the various addresses
@@ -68,6 +69,12 @@ void processNS( unsigned char *msg,
     struct nd_neighbor_solicit  *ns =
         (struct nd_neighbor_solicit *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
 
+    // For the interfaceIdx
+    struct  in6_addr            prefixaddr = interfaces[ifIndex].prefix;
+    int                         prefixaddrlen = interfaces[ifIndex].prefixLen;
+    unsigned char               *linkAddr = interfaces[ifIndex].linkAddr;
+    int                         interfaceIdx = interfaces[ifIndex].index;
+        
     // Extracted from the received packet
     struct in6_addr             *srcaddr;
     struct in6_addr             *dstaddr;

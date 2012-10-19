@@ -40,8 +40,19 @@ int readConfig(char *configFileName)
     const char delimiters[] = "=";
     char *lefttoken, *righttoken;
     char *cp;
+    unsigned int    prefixCount=0; // Temp count of prefixes, to match interfaces
     // Used if building white/blacklist
     struct  in6_addr    listEntry;
+    unsigned int check;
+    // For prefix manipulation:
+    char            prefixaddrstr[INET6_ADDRSTRLEN];
+    struct          in6_addr prefixaddr;
+    int             prefixaddrlen;
+    char            interfacestr[INTERFACE_STRLEN];
+
+    
+    // Ensure global set correctly
+    interfaceCount = 0;
 
     if ((configFileFD = fopen(configFileName, "r")) == NULL)
     {
@@ -110,6 +121,12 @@ int readConfig(char *configFileName)
                     }
                     // Build a binary image of it
                     build_addr(prefixaddrstr, &prefixaddr);
+                    // Store it
+                    interfaces[prefixCount].prefix = prefixaddr;
+                    strncpy( interfaces[prefixCount].prefixStr, prefixaddrstr, 
+                             sizeof(interfaces[prefixCount].prefixStr) );
+                    interfaces[prefixCount].prefixLen = prefixaddrlen;
+                    prefixCount++;
                     break;
 
                 case NPD6INTERFACE:
@@ -120,6 +137,15 @@ int readConfig(char *configFileName)
                     }
                     strncpy( interfacestr, righttoken, sizeof(interfacestr));
                     flog(LOG_INFO, "Supplied interface is %s", interfacestr);
+                    // Store it
+                    strncpy( interfaces[interfaceCount].nameStr, interfacestr, 
+                             sizeof(interfaces[interfaceCount].nameStr) );
+                    interfaceCount++;
+                    if ( interfaceCount > MAXINTERFACES )
+                    {
+                        flog(LOG_ERR, "Maximum %d interfaces permitted. Error.", MAXINTERFACES);
+                        return 1;
+                    }
                     break;
 
                 case NPD6OPTFLAG:
@@ -272,32 +298,74 @@ int readConfig(char *configFileName)
     } while (len);
 
 
+    // Basic check: did we have the same number of interfaces as prefixes?
+    if ( interfaceCount != prefixCount )
+    {
+        flog(LOG_ERR, "Must have same number of prefixes as interfaces. Error in config.");
+        return 1;
+    }
+    // Did we have ANY interfaces?
+    if ( interfaceCount < 1)
+    {
+        flog(LOG_ERR, "Must define at least one interface/prefix pair.");
+        return 1;
+    }
 
     // Now do some final checks to ensure all required params were supplied
-    if ( ! strcmp(prefixaddrstr, NULLSTR) )
-    {
-        flog(LOG_ERR, "Prefix not defined in config file.");
-        return 1;
-    }
-    if ( ! strcmp(interfacestr, NULLSTR) )
-    {
-        flog(LOG_ERR, "interface not defined in config file.");
-        return 1;
-    }
+//    if ( ! strcmp(prefixaddrstr, NULLSTR) )
+//    {
+//        flog(LOG_ERR, "Prefix not defined in config file.");
+//        return 1;
+//    }
+//    if ( ! strcmp(interfacestr, NULLSTR) )
+//    {
+//        flog(LOG_ERR, "interface not defined in config file.");
+//        return 1;
+//    }
 
-    // Work out the interface index
-    interfaceIdx = if_nametoindex(interfacestr);
-    if (!interfaceIdx)
-    {
-        flog(LOG_ERR, "Could not get ifIndex for interface %s", interfacestr);
-        return 1;
-    }
+    flog(LOG_DEBUG, "Total interfaces defined: %d", interfaceCount);
 
-    if (getLinkaddress( interfacestr, linkAddr) )
+    // Work out the interface indices and link addrs
+    for (check = 0; check < interfaceCount; check ++)
     {
-        flog(LOG_ERR, "failed to convert interface specified to a link-level address.");
-        return 1;
+        unsigned int    interfaceIdx;
+        //unsigned char   linkAddr[6];
+        
+        // Interface index number
+        interfaceIdx = if_nametoindex( interfaces[check].nameStr );
+        if ( !interfaceIdx )
+        {
+            flog(LOG_ERR, "Could not get ifIndex for interface %s",
+                 interfaces[check].nameStr);
+            return 1;
+        }
+        interfaces[check].index = interfaceIdx;
+        flog(LOG_DEBUG2, "i/f name = %s, i/f index = %d",
+                    interfaces[check].nameStr,
+                    interfaces[check].index);
+        
+        // Interface's link address
+        if (getLinkaddress( interfaces[check].nameStr, interfaces[check].linkAddr) )
+        {
+            flog(LOG_ERR, "Failed to match interface %s to a lnik-level address.", 
+                 interfaces[check].nameStr );
+            return 1;
+        }
     }
+    
+    
+//    interfaceIdx = if_nametoindex(interfacestr);
+//    if (!interfaceIdx)
+//    {
+//        flog(LOG_ERR, "Could not get ifIndex for interface %s", interfacestr);
+//        return 1;
+//    }
+
+//    if (getLinkaddress( interfacestr, linkAddr) )
+//    {
+//        flog(LOG_ERR, "failed to convert interface specified to a link-level address.");
+//        return 1;
+//    }
 
 
     return 0;

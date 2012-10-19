@@ -485,13 +485,18 @@ void showVersion(void)
 
 void dropdead(void)
 {
+    int loop;
+    
     /* We're dying, so tidy up*/
 
-    /* Restore interface flags*/
-    if_allmulti(interfacestr, 0);
+    /* Restore interface flags and close sockets */
+    for (loop=0; loop<interfaceCount; loop++)
+    {
+        if_allmulti(interfaces[loop].nameStr, interfaces[loop].multiStatus);
+        close( interfaces[loop].pktSock );
+    }
 
     close(sockicmp);
-    close(sockpkt);
 
     flog(LOG_ERR, "Tidied up. Goodbye cruel world.");
     exit(0);

@@ -63,6 +63,7 @@
 #define USE_STD             3
 #define MAXTARGETS          1000000         // Ultimate sane limit
 #define LISTLOGGING         (listLog==1?LOG_INFO:LOG_DEBUG)
+#define MAXINTERFACES       8
 //*****************************************************************************
 // Globals
 //
@@ -79,14 +80,28 @@ FILE            *configFileFD;
 int             initialIFFlags;
 
 // Interface we're interested in
-char            interfacestr[INTERFACE_STRLEN];
-unsigned int    interfaceIdx;
-unsigned char   linkAddr[6];
+//char            interfacestr[INTERFACE_STRLEN];
+//unsigned int    interfaceIdx;
+//unsigned char   linkAddr[6];
 
 // Regarding the target prefix being matched
-char            prefixaddrstr[INET6_ADDRSTRLEN];
-struct          in6_addr prefixaddr;
-int             prefixaddrlen;
+//char            prefixaddrstr[INET6_ADDRSTRLEN];
+//struct          in6_addr prefixaddr;
+//int             prefixaddrlen;
+
+// Record of interfaces, prefix, indices, etc.
+struct npd6Interface {
+    char            nameStr[INTERFACE_STRLEN];
+    unsigned int    index;
+    char            prefixStr[INET6_ADDRSTRLEN];
+    struct in6_addr prefix;
+    int             prefixLen;
+    unsigned char   linkAddr[6];
+    unsigned int    multiStatus;
+    int             pktSock;
+};
+unsigned int    interfaceCount;         // Total number of interface/prefix combos
+struct  npd6Interface interfaces[MAXINTERFACES];
 
 // Key behaviour
 int             naLinkOptFlag;      // From config file NPD6OPTFLAG
@@ -143,14 +158,14 @@ void    storeListEntry(struct in6_addr *);
 
 
 // icmp6.c
-int     open_packet_socket(void);
+int     open_packet_socket(int);
 int     open_icmpv6_socket(void);
-int     get_rx(unsigned char *);
-void    if_allmulti(char *, unsigned int);
+int     get_rx(int, unsigned char *);
+int     if_allmulti(char *, unsigned int);
 int     init_sockets(void);
 
 // ip6.c
-void    processNS( unsigned char *, unsigned int);
+void    processNS(int, unsigned char *, unsigned int);
 int     addr6match( struct in6_addr *, struct in6_addr *, int);
 
 

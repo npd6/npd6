@@ -56,13 +56,13 @@ struct Interface *IfaceList = NULL;
 int main(int argc, char *argv[])
 {
     char logfile[FILENAME_MAX] = "";
-    int c, err;
+    int c, err, loop;
 
     // Default some globals
     strncpy(configfile, NPD6_CONF, FILENAME_MAX);
-    strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
-    strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
-    interfaceIdx=-1;
+    //strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
+    //strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
+    //interfaceIdx=-1;
     daemonize=1;
     // Default black/whitelisting to OFF
     listType = NOLIST;
@@ -71,6 +71,9 @@ int main(int argc, char *argv[])
     nsIgnoreLocal = 1;
     naRouter = 1;
     maxHops = MAXMAXHOPS;
+    
+    /* Interface info */
+    interfaceCount = 0;
 
     /* Parse the args */
     while ((c = getopt_long(argc, argv, OPTIONS_STR, prog_opt, NULL)) > 0)
@@ -131,19 +134,23 @@ int main(int argc, char *argv[])
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
     }
-
+/*
     flog(LOG_INFO, "Using normalised prefix %s/%d", prefixaddrstr, prefixaddrlen);
     flog(LOG_DEBUG2, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
-
+*/
     err = init_sockets();
     if (err) {
-        flog(LOG_ERR, "init_sockets: failed to initialise one or both sockets.");
+        flog(LOG_ERR, "init_sockets: failed to initialise %d sockets.", err);
         exit(1);
     }
 
-    /* Set allmulti on the interface */
-    if_allmulti(interfacestr, TRUE);
-
+    /* Set allmulti on the interfaces */
+    //if_allmulti(interfacestr, TRUE);
+    for (loop=0; loop<interfaceCount; loop++)
+    {
+        interfaces[loop].multiStatus = if_allmulti(interfaces[loop].nameStr, TRUE);
+    }
+  
     /* Seems like about the right time to daemonize (or not) */
     if (daemonize)
     {
@@ -170,73 +177,85 @@ int main(int argc, char *argv[])
 
 void dispatcher(void)
 {
-    struct pollfd   fds[2];
+    struct pollfd   fds[MAXINTERFACES];
     unsigned int    msglen;
     unsigned char   msgdata[MAX_MSG_SIZE * 2];
-    int             rc, err;
-
+    int             rc;
+    int             fdIdx;
+    
     memset(fds, 0, sizeof(fds));
-    fds[0].fd = sockpkt;
-    fds[0].events = POLLIN;
-    fds[0].revents = 0;
-    fds[1].fd = -1;
-    fds[1].events = 0;
-    fds[1].revents = 0;
-
+    
+    for(fdIdx=0; fdIdx < interfaceCount; fdIdx++)
+    {
+        fds[fdIdx].fd = interfaces[fdIdx].pktSock;
+        fds[fdIdx].events = POLLIN;
+        fds[fdIdx].revents = 0;
+    }
+    // Tail it
+    fds[interfaceCount].fd = -1;
+    fds[interfaceCount].events = 0;
+    fds[interfaceCount].revents = 0;
+    
+    //     fds[0].fd = sockpkt;
+    //     fds[0].events = POLLIN;
+    //     fds[0].revents = 0;
+    //     fds[1].fd = -1;
+    //     fds[1].events = 0;
+    //     fds[1].revents = 0;
+    
     for (;;)
     {
         rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);
-
+        flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
+        
         if (rc > 0)
         {
-            if (   fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)
-                || fds[1].revents & (POLLERR | POLLHUP | POLLNVAL) )
+            // Most likely event is a valid data item received.
+            for (fdIdx=0; fdIdx < interfaceCount; fdIdx++)
             {
-                flog(LOG_WARNING, "Major socket error on fds[0 or 1].fd");
-                // Try and recover
-                close(sockpkt);
-                close(sockicmp);
-                // Allow a moment for things to maybe return to normal...
-                sleep(1);
-                err = init_sockets();
-                if (err)
+                if (fds[fdIdx].revents & POLLIN)
                 {
-                    flog(LOG_ERR, "init_sockets: failed to reinitialise one or both sockets.");
-                    exit(1);
+                    msglen = get_rx(fdIdx, msgdata);
+                    // msglen is checked for sanity already within get_rx()
+                    flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
+                    processNS(fdIdx, msgdata, msglen);
+                    continue;
                 }
-                memset(fds, 0, sizeof(fds));
-                fds[0].fd = sockpkt;
-                fds[0].events = POLLIN;
-                fds[0].revents = 0;
-                fds[1].fd = -1;
-                fds[1].events = 0;
-                fds[1].revents = 0;
-                continue;
+                
+                // If it wasn't a POLLIN, it is likely an signifciant error
+                if (fds[fdIdx].revents & (POLLERR | POLLHUP | POLLNVAL) )
+                {
+                    flog(LOG_WARNING, "Major socket error on fds %d", fdIdx);
+                    // Try and recover... long shot
+                    close(interfaces[fdIdx].pktSock);
+                    sleep(1);   // TODO NO!!!
+                    interfaces[fdIdx].pktSock = open_packet_socket(interfaces[fdIdx].index);
+                    if ( interfaces[fdIdx].pktSock < 0)
+                    {
+                        // Drop dead. We're stuffed.
+                        flog(LOG_ERR, "dispatcher(): failed to reinit stuck socket. Dead.");
+                        exit(1);
+                    }
+                    fds[fdIdx].fd = interfaces[fdIdx].pktSock;
+                    fds[fdIdx].events = POLLIN;
+                    fds[fdIdx].revents = 0;
+                    continue;
+                }
             }
-            else if (fds[0].revents & POLLIN)
-            {
-                msglen = get_rx(msgdata);
-                // msglen is checked for sanity already within get_rx()
-                flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
-
-                // Have processNS() do the rest of validation and work...
-                processNS(msgdata, msglen);
-                continue;
-            }
-            else if ( rc == 0 )
-            {
-                flog(LOG_DEBUG, "Timer event");
-                // Timer fired?
-                // One day. If we implement timers.
-            }
-            else if ( rc == -1 )
-            {
-                flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
-                continue;
-            }
-
-            flog(LOG_DEBUG, "Timed out of poll(). Timeout was %d ms", DISPATCH_TIMEOUT);
         }
+        else if ( rc == 0 )
+        {
+            flog(LOG_DEBUG, "Timed out.");
+            // Timer fired?
+            // One day. If we implement timers.
+        }
+        else if ( rc == -1 )
+        {
+            flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
+            continue;
+        }
+        
+        flog(LOG_DEBUG, "Timed out of poll(). Timeout was %d ms", DISPATCH_TIMEOUT);
     }
 }
 

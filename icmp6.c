@@ -33,7 +33,7 @@
  *      and sets up the appropriate BSD PF.
  *
  * Inputs:
- *  none
+ *  Index of the interface we're opening it for.
  *
  * Outputs:
  *  none
@@ -42,7 +42,7 @@
  *      int sock on success, otherwise -1
  *
  */
-int open_packet_socket(void)
+int open_packet_socket(int ifIndex)
 {
     int sock, err;
     struct sock_fprog fprog;
@@ -73,17 +73,17 @@ int open_packet_socket(void)
     memset(&lladdr, 0, sizeof(lladdr));
     lladdr.sll_family = AF_PACKET;
     lladdr.sll_protocol = htons(ETH_P_IPV6);
-    lladdr.sll_ifindex = interfaceIdx;
+    lladdr.sll_ifindex = ifIndex;
     lladdr.sll_hatype = 0;
     lladdr.sll_pkttype = 0;
     lladdr.sll_halen = 0;
     err=bind(sock, (struct sockaddr *)&lladdr, sizeof(lladdr));
     if (err < 0)
     {
-        flog(LOG_ERR, "packet socket bind to interface %d failed: %s", interfaceIdx, strerror(errno));
+        flog(LOG_ERR, "packet socket bind to interface %d failed: %s", ifIndex, strerror(errno));
         return (-1);
     }
-    flog(LOG_DEBUG2, "packet socket bind to interface %d OK", interfaceIdx);
+    flog(LOG_DEBUG2, "packet socket bind to interface %d OK", ifIndex);
 
     // Tie the BSD-PF filter to the socket
     err = setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, &fprog, sizeof(fprog));
@@ -155,13 +155,16 @@ int open_icmpv6_socket(void)
  * care about them afterwards. Once we've got the raw data and the len
  * we're good.
  */
-int get_rx(unsigned char *msg) 
+int get_rx(int ifIndex, unsigned char *msg) 
 {
     struct sockaddr_in6 saddr;
     struct msghdr mhdr;
     struct iovec iov;
     int len;
     fd_set rfds;
+    int     sockpkt;
+    
+    sockpkt = interfaces[ifIndex].pktSock;
 
     FD_ZERO( &rfds );
     FD_SET( sockpkt, &rfds );
@@ -213,22 +216,26 @@ int get_rx(unsigned char *msg)
  * Inputs:
  *  ifname is interface name
  *  state: 1-> Set (or confirm) flag is enabled
- *  state: 0-> Set flag back to initial condition.
+ *  state: 0-> Set flag to unset condition.
  *
  * Outputs:
  *  none
  *
  * Return:
- *  void
+ *  The previous value of the flag, prior to change.
  * 
  * Notes:
  *  Miserere mihi peccatori.
  */
-void if_allmulti(char *ifname, unsigned int state)
+int if_allmulti(char *ifname, unsigned int state)
 {
     struct ifreq    ifr;
     int skfd;
+    int current;
 
+    flog(LOG_DEBUG2, "Requesting that %s be set to state = %d",
+                ifname, state);
+    
     skfd = socket(AF_INET, SOCK_DGRAM, 0);
     
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
@@ -239,15 +246,16 @@ void if_allmulti(char *ifname, unsigned int state)
         exit(1);
     }
 
+    current = ifr.ifr_flags;
+    
     if (state)
     {
         flog(LOG_DEBUG, "Setting IFFALLMULTI if required.");
-        initialIFFlags = ifr.ifr_flags;
         ifr.ifr_flags |= IFF_ALLMULTI;
-        if (ifr.ifr_flags == initialIFFlags)
+        if (ifr.ifr_flags == current)
         {
             // Already set
-            flog(LOG_DEBUG, "Not required, was set at startup anyway.");
+            flog(LOG_DEBUG, "Not required, was set at anyway.");
             goto sinfulexit;;
         }
     }
@@ -255,13 +263,13 @@ void if_allmulti(char *ifname, unsigned int state)
     {
         flog(LOG_DEBUG, "Clearing IFFALLMULTI if required.");
         // Was it originally set?
-        if (initialIFFlags & IFF_ALLMULTI)
-        {
-            // Was originally set - so leave it
-            flog(LOG_DEBUG, "Not required, was set at startup anyway.");
-            goto sinfulexit;;
-        }
-        // else unset it
+//         if (initialIFFlags & IFF_ALLMULTI)
+//         {
+//             // Was originally set - so leave it
+//             flog(LOG_DEBUG, "Not required, was set at startup anyway.");
+//             goto sinfulexit;;
+//         }
+//         // else unset it
         ifr.ifr_flags &= ~IFF_ALLMULTI;
     }
     
@@ -273,7 +281,7 @@ void if_allmulti(char *ifname, unsigned int state)
 
 sinfulexit:
     close(skfd);
-    return;
+    return (current || IFF_ALLMULTI);
 }
 
 
@@ -286,7 +294,7 @@ sinfulexit:
  *  void
  *
  * Outputs:
- *  Set globals sockpkt & sockicmp.
+ *  Set global sockicmp and per i/f rx pkt socket
  *
  * Return:
  *  Non-0 if failure, else 0.
@@ -294,15 +302,22 @@ sinfulexit:
 int init_sockets(void)
 {
     int errcount = 0;
+    int loop, sock;
 
     /* Raw socket for receiving NSs */
-    sockpkt = open_packet_socket();
-    if (sockpkt < 0)
+    //sockpkt = open_packet_socket();
+    for (loop=0; loop < interfaceCount; loop++)
     {
-        flog(LOG_ERR, "open_packet_socket: failed.");
-        errcount++;
+        sock = open_packet_socket(interfaces[loop].index);
+  
+        if (sock < 0)
+        {
+            flog(LOG_ERR, "open_packet_socket: failed on iteration %d", loop);
+            errcount++;
+        }
+        interfaces[loop].pktSock = sock;
+        flog(LOG_DEBUG, "open_packet_socket: %d OK.", loop);
     }
-    flog(LOG_DEBUG, "open_packet_socket: OK.");
 
     /* ICMPv6 socket for sending NAs */
     sockicmp = open_icmpv6_socket();
