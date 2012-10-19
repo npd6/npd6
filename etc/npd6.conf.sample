@@ -10,6 +10,9 @@ prefix=2222:1111:2222:3333:
 // Which interface are we monitoring and using?
 interface = eth0
 
+// add additional prefix and interface pairs as required - up to 8
+
+
 //**********************************
 //*** Black/Whitelisting ***********
 // If 'none' (the default) any NS matching the prefix will
