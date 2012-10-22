@@ -242,6 +242,7 @@ void dispatcher(void)
                     continue;
                 }
             }
+	    continue;
         }
         else if ( rc == 0 )
         {
