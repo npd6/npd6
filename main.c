@@ -251,7 +251,13 @@ void dispatcher(void)
         }
         else if ( rc == -1 )
         {
-            flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
+	    /* Truly an error or maybe we processed a signal?*/
+	    if ( errno == EINTR )
+	    {
+		flog(LOG_ERR, "Broke out of the poll() via a signal event.");
+	    } else {
+            	flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
+	    }
             continue;
         }
         
