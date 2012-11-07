@@ -79,16 +79,6 @@ char            configfile[FILENAME_MAX];
 FILE            *configFileFD;
 int             initialIFFlags;
 
-// Interface we're interested in
-//char            interfacestr[INTERFACE_STRLEN];
-//unsigned int    interfaceIdx;
-//unsigned char   linkAddr[6];
-
-// Regarding the target prefix being matched
-//char            prefixaddrstr[INET6_ADDRSTRLEN];
-//struct          in6_addr prefixaddr;
-//int             prefixaddrlen;
-
 // Record of interfaces, prefix, indices, etc.
 struct npd6Interface {
     char            nameStr[INTERFACE_STRLEN];

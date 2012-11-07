@@ -60,9 +60,6 @@ int main(int argc, char *argv[])
 
     // Default some globals
     strncpy(configfile, NPD6_CONF, FILENAME_MAX);
-    //strncpy( interfacestr, NULLSTR, sizeof(NULLSTR));
-    //strncpy( prefixaddrstr, NULLSTR, sizeof(NULLSTR));
-    //interfaceIdx=-1;
     daemonize=1;
     // Default black/whitelisting to OFF
     listType = NOLIST;
@@ -134,10 +131,6 @@ int main(int argc, char *argv[])
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
     }
-/*
-    flog(LOG_INFO, "Using normalised prefix %s/%d", prefixaddrstr, prefixaddrlen);
-    flog(LOG_DEBUG2, "ifIndex for %s is: %d", interfacestr, interfaceIdx);
-*/
     err = init_sockets();
     if (err) {
         flog(LOG_ERR, "init_sockets: failed to initialise %d sockets.", err);
@@ -145,7 +138,6 @@ int main(int argc, char *argv[])
     }
 
     /* Set allmulti on the interfaces */
-    //if_allmulti(interfacestr, TRUE);
     for (loop=0; loop<interfaceCount; loop++)
     {
         interfaces[loop].multiStatus = if_allmulti(interfaces[loop].nameStr, TRUE);
@@ -195,14 +187,7 @@ void dispatcher(void)
     fds[interfaceCount].fd = -1;
     fds[interfaceCount].events = 0;
     fds[interfaceCount].revents = 0;
-    
-    //     fds[0].fd = sockpkt;
-    //     fds[0].events = POLLIN;
-    //     fds[0].revents = 0;
-    //     fds[1].fd = -1;
-    //     fds[1].events = 0;
-    //     fds[1].revents = 0;
-    
+ 
     for (;;)
     {
         rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);

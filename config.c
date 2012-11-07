@@ -311,18 +311,6 @@ int readConfig(char *configFileName)
         return 1;
     }
 
-    // Now do some final checks to ensure all required params were supplied
-//    if ( ! strcmp(prefixaddrstr, NULLSTR) )
-//    {
-//        flog(LOG_ERR, "Prefix not defined in config file.");
-//        return 1;
-//    }
-//    if ( ! strcmp(interfacestr, NULLSTR) )
-//    {
-//        flog(LOG_ERR, "interface not defined in config file.");
-//        return 1;
-//    }
-
     flog(LOG_DEBUG, "Total interfaces defined: %d", interfaceCount);
 
     // Work out the interface indices and link addrs
@@ -353,20 +341,5 @@ int readConfig(char *configFileName)
         }
     }
     
-    
-//    interfaceIdx = if_nametoindex(interfacestr);
-//    if (!interfaceIdx)
-//    {
-//        flog(LOG_ERR, "Could not get ifIndex for interface %s", interfacestr);
-//        return 1;
-//    }
-
-//    if (getLinkaddress( interfacestr, linkAddr) )
-//    {
-//        flog(LOG_ERR, "failed to convert interface specified to a link-level address.");
-//        return 1;
-//    }
-
-
     return 0;
 }

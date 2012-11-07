@@ -262,14 +262,6 @@ int if_allmulti(char *ifname, unsigned int state)
     else
     {
         flog(LOG_DEBUG, "Clearing IFFALLMULTI if required.");
-        // Was it originally set?
-//         if (initialIFFlags & IFF_ALLMULTI)
-//         {
-//             // Was originally set - so leave it
-//             flog(LOG_DEBUG, "Not required, was set at startup anyway.");
-//             goto sinfulexit;;
-//         }
-//         // else unset it
         ifr.ifr_flags &= ~IFF_ALLMULTI;
     }
     
@@ -305,7 +297,6 @@ int init_sockets(void)
     int loop, sock;
 
     /* Raw socket for receiving NSs */
-    //sockpkt = open_packet_socket();
     for (loop=0; loop < interfaceCount; loop++)
     {
         sock = open_packet_socket(interfaces[loop].index);
