@@ -114,7 +114,8 @@ int             listType;
 #define         WHITELIST   2
 int             listLog;            // From config file NPD6LISTLOG
 
-
+// Error handling
+int		pollErrorThreshold; // From config file
 
 //*****************************************************************************
 // Prototypes

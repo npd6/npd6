@@ -34,8 +34,9 @@
 #define NPD6LISTADDR    8
 #define NPD6EXPRADDR    9
 #define NPD6LISTLOG     10
+#define NPD6ERRORTH	11
 
-#define CONFIGTOTAL     11
+#define CONFIGTOTAL     12
 #define NOMATCH         -1
 char *configStrs[CONFIGTOTAL] =
 {
@@ -49,7 +50,8 @@ char *configStrs[CONFIGTOTAL] =
     "listtype",
     "addrlist",
     "exprlist",
-    "listlogging"
+    "listlogging",
+    "pollErrorLimit"
 };
 
 // For logging system
