@@ -174,7 +174,7 @@ void dispatcher(void)
     unsigned char   msgdata[MAX_MSG_SIZE * 2];
     int             rc;
     int             fdIdx;
-    int		    consecutiveErrors = 0;
+    int             consecutivePollErrors = 0;
     
     memset(fds, 0, sizeof(fds));
     
@@ -201,7 +201,7 @@ void dispatcher(void)
             {
                 if (fds[fdIdx].revents & POLLIN)
                 {
-		    consecutiveErrors = 0;	// reset it
+                    consecutivePollErrors = 0;	// reset it
                     msglen = get_rx(fdIdx, msgdata);
                     // msglen is checked for sanity already within get_rx()
                     flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
@@ -227,12 +227,12 @@ void dispatcher(void)
                     fds[fdIdx].events = POLLIN;
                     fds[fdIdx].revents = 0;
 
-		    // Have we had more consecutive errors than the threshold value?
-		    if (consecutiveErrors++ > pollErrorThreshold)
-		    {
-			flog(LOG_ERR, "dispatcher(): %d consecutive major poll errors. Terminating.",
-				consecutiveErrors);
-		    }
+                    // Have we had more consecutive errors than the threshold value?
+                    if ((pollErrorLimit > 0) && (consecutivePollErrors++ > pollErrorLimit) )
+                    {
+                        flog(LOG_ERR, "dispatcher(): %d consecutive major poll errors. Terminating.",
+                            consecutivePollErrors);
+                    }
 
                     continue;
                 }

@@ -53,6 +53,7 @@ int readConfig(char *configFileName)
     
     // Ensure global set correctly
     interfaceCount = 0;
+    pollErrorLimit = 10;    // Vaguely sensible default
 
     if ((configFileFD = fopen(configFileName, "r")) == NULL)
     {
@@ -273,6 +274,23 @@ int readConfig(char *configFileName)
                         flog(LOG_ERR, "Address %s invalid.", righttoken);
                     }
                     break;
+                    
+                case NPD6ERRORTH:
+                    pollErrorLimit = -1;
+                    pollErrorLimit = atoi(righttoken);
+
+                    if ( (pollErrorLimit < 0) )
+                    {
+                        flog(LOG_ERR, "pollErrorLimit - invalid -ve value specified in config.");
+                        return 1;
+                    }
+                    else
+                    {
+                        flog(LOG_INFO, "pollErrorLimit set to %d", pollErrorLimit);
+                    }
+                    break;                    
+                    
+                    
                 case NPD6EXPRADDR:
                     flog(LOG_DEBUG, "Address expression %s added.", linein);
                     storeExpression(linein);

@@ -115,7 +115,7 @@ int             listType;
 int             listLog;            // From config file NPD6LISTLOG
 
 // Error handling
-int		pollErrorThreshold; // From config file
+int		        pollErrorLimit;     // From config file
 
 //*****************************************************************************
 // Prototypes
