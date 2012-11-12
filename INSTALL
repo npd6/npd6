@@ -5,7 +5,7 @@ Building
 	make
 	sudo make install
 
-2) A debian package can be built using
+2) [OPTIONAL!] A debian package can be built using
 	make debian 
 however it may be easier to download a pre-built package from the web-site where you got the 
 source code! The debian build has various toolsets required, but odds-on if you're in to
