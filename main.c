@@ -232,6 +232,7 @@ void dispatcher(void)
                     {
                         flog(LOG_ERR, "dispatcher(): %d consecutive major poll errors. Terminating.",
                             consecutivePollErrors);
+			dropdead();
                     }
 
                     continue;
