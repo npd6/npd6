@@ -77,10 +77,10 @@ routerNA = true
 // NAs may be silently ignored! Best left as-is...
 maxHops = 255
 
-// (Default: 10) Set to 0 to disable this threshold completely.
-// If more than this number of consecutive poll errors occur, we
+// (Default: 20) Set to 0 to disable this threshold completely.
+// If more than this number of consecutive poll errors occur:wq
 // terminate the process. e.g. an interface goes away permanently
-pollErrorLimit = 10
+pollErrorLimit = 20
 
 // $HeadURL: https://npd6.googlecode.com/svn/trunk/etc/npd6.conf $
 // $Id: npd6.conf 98 2012-07-16 07:37:02Z sgroarke $

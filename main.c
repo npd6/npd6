@@ -228,7 +228,8 @@ void dispatcher(void)
                     fds[fdIdx].revents = 0;
 
                     // Have we had more consecutive errors than the threshold value?
-                    if ((pollErrorLimit > 0) && (consecutivePollErrors++ > pollErrorLimit) )
+		    consecutivePollErrors++;
+                    if ((pollErrorLimit > 0) && (consecutivePollErrors >= pollErrorLimit) )
                     {
                         flog(LOG_ERR, "dispatcher(): %d consecutive major poll errors. Terminating.",
                             consecutivePollErrors);
@@ -242,7 +243,8 @@ void dispatcher(void)
         }
         else if ( rc == 0 )
         {
-            flog(LOG_DEBUG, "Timed out.");
+            flog(LOG_DEBUG, "Stale select - Timed out. Low activity.");
+	    consecutivePollErrors = 0; // Using the select timeout as our quantum of error counting
             // Timer fired?
             // One day. If we implement timers.
         }

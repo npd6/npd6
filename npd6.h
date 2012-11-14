@@ -55,7 +55,7 @@
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #define MAXMAXHOPS          255
 #define HWADDR_MAX          16
-#define DISPATCH_TIMEOUT    300000          // milliseconds 300000 = 5 mins
+#define DISPATCH_TIMEOUT    30000          // milliseconds 30000 = 30 sec
 #define flog(pri, ...)      npd6log(__FUNCTION__, pri, __VA_ARGS__)
 #define LOG_DEBUG2          8
 #define USE_FILE            1
