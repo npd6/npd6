@@ -1,3 +1,10 @@
+npd6 (0.7.0) precise; urgency=low
+
+    * Multi-interface support.
+    * Minor bug fixes and doc changes..
+
+ -- Sean Groarke <npd6project@gmail.com>  Mon, 14 Nov 2012 07:00:00 +0200
+
 npd6 (0.6.0) precise; urgency=low
 
     * Bug fix for issue 42.
