@@ -324,21 +324,53 @@ void processNS( int ifIndex,
 int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
 {
     int idx, bdx;
-
+    unsigned int mask;
+    
     flog(LOG_DEBUG2, "Called to match up to %d bits.", bits);
-
+    
     if (bits > 128)
     {
         flog(LOG_ERR, "Bits > 128 (%d) does not make sense.", bits);
         return 0;
     }
     
-    for (bdx=1,idx=0; bdx<=bits; bdx+=8, idx++)
+    // The approach here is to gallop along the address comparing full octets for as far as possible.
+    // Then when/if we reach a non-octet aligned point, we deal with that.
+    // Since vast majority of folks will have octet aligned prefixes, this is highly efficient, and
+    // anyway the non-octete aligned code is pretty light too...
+    for (bdx=bits, idx=0; bdx>0; bdx-=8, idx++)
     {
-        if ( a1->s6_addr[idx] != a2->s6_addr[idx])
+      
+        if (bdx >= 8)
         {
-            flog(LOG_DEBUG2, "Match failed at bit position %d", bdx);
-            return 0;
+            // We can compare a full 8-bit comparison - no masking yet
+            if ( a1->s6_addr[idx] != a2->s6_addr[idx] )
+            {
+                //Failed to match
+                flog(LOG_DEBUG2, "Failed in 8-bit match test.idx = %d, bdx = %d", idx, bdx);
+                flog(LOG_DEBUG2, "a1 value: %2x a2 value: %2x", a1->s6_addr[idx], a2->s6_addr[idx]);
+                return 0;
+            }
+        }
+        else 
+        {
+            // We are in the end-zone - masking required
+            switch (bdx) {
+                case 7: mask=0xfe;  break;
+                case 6: mask=0xfc;  break;
+                case 5: mask=0xf8;  break;
+                case 4: mask=0xf0;  break;
+                case 3: mask=0xe0;  break;
+                case 2: mask=0xc0;  break;
+                case 1: mask=0x80;  break;
+            }
+            if ( ((a1->s6_addr[idx])&mask) != a2->s6_addr[idx] )
+            {
+                //Failed to match
+                flog(LOG_DEBUG2, "Failed in mask match test.idx = %d, bdx = %d, mask = %04x", idx, bdx, mask);
+                flog(LOG_DEBUG2, "a1 value: %04x a2 value: %04x", a1->s6_addr[idx], a2->s6_addr[idx]);
+                return 0;
+            }
         }
     }
 

@@ -47,8 +47,9 @@ int readConfig(char *configFileName)
     // For prefix manipulation:
     char            prefixaddrstr[INET6_ADDRSTRLEN];
     struct          in6_addr prefixaddr;
-    int             prefixaddrlen;
+    int             prefixaddrlen, masklen=0;
     char            interfacestr[INTERFACE_STRLEN];
+    char            *slashMarker;
 
     
     // Ensure global set correctly
@@ -112,13 +113,41 @@ int readConfig(char *configFileName)
                 case NPD6PREFIX:
                     strncpy( prefixaddrstr, righttoken, sizeof(prefixaddrstr));
                     flog(LOG_DEBUG, "Raw prefix: %s", prefixaddrstr);
+                    // The prefix may be optionally specified with a mask.
+                    // e.g. 1:2:3:: or 1:2:3::/12
+                    slashMarker = strchr( prefixaddrstr, '/');
+                    if (slashMarker != NULL)
+                    {
+                        // We found a mask marker
+                        masklen = atoi(slashMarker + 1);
+                        // Reterminate prefix
+                        flog(LOG_DEBUG2, "Pre: %s", prefixaddrstr);
+                        slashMarker[0] = '\0';
+                        flog(LOG_DEBUG2, "Post: %s", prefixaddrstr);
+                    }
+
                     // We need to pad it up and record the length in bits
                     prefixaddrlen = prefixset(prefixaddrstr);
                     flog(LOG_INFO, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
+                    flog(LOG_INFO, "Mask specified: %d", masklen);
                     if ( prefixaddrlen <= 0 )
                     {
                         flog(LOG_ERR, "Invalid prefix.");
                         return 1;
+                    }
+                    // If no mask specified, assume a default value
+                    if ( masklen == 0 )
+                    {
+                        flog(LOG_INFO, "No mask specified. Assuming mask length %d", prefixaddrlen);
+                        masklen = prefixaddrlen;
+                    }
+                    // If specified mask length at odds with the prefix itself, flag it
+                    // i.e. if the mask specified is not on a 16-bit boundary. Quite legal, but likely
+                    // not common
+                    if ( masklen != prefixaddrlen )
+                    {
+                        flog(LOG_INFO, "Mask of %d correct? Prefix looked like %d. Continuing with your value (%d)",
+                                        masklen, prefixaddrlen, masklen);
                     }
                     // Build a binary image of it
                     build_addr(prefixaddrstr, &prefixaddr);
@@ -126,7 +155,7 @@ int readConfig(char *configFileName)
                     interfaces[prefixCount].prefix = prefixaddr;
                     strncpy( interfaces[prefixCount].prefixStr, prefixaddrstr, 
                              sizeof(interfaces[prefixCount].prefixStr) );
-                    interfaces[prefixCount].prefixLen = prefixaddrlen;
+                    interfaces[prefixCount].prefixLen = masklen;
                     prefixCount++;
                     break;
 

@@ -283,6 +283,7 @@ int prefixset(char px[])
 {
     size_t len;
     int missing, c1, c2;
+    char suffix[INET6_ADDRSTRLEN];
 
     // First we must ensure fully padded with leading 0s
     for(c1=0; c1<INET6_ADDRSTRLEN; c1+=5 )
@@ -297,17 +298,24 @@ int prefixset(char px[])
         }
 
         missing = abs(c2-4);
-
-        if (missing != 0)
+        if ( (missing>=1) && (missing<=3) )
         {
-            char suffix[INET6_ADDRSTRLEN];
             strcpy( suffix, &px[c1]);       // Grab the tail
             memset(&px[c1], '0', missing);  // pad it with missing zeros
             px[c1+missing] = '\0';          // Reterminate
             strcat(px, suffix);             // Add the tail back
         }
     }
-
+    flog(LOG_DEBUG2, "String after padding: %s", px);
+    
+    // Do we have a '::' on the end we need to trim?
+    len = strlen(px);
+    if ( (px[len-1] == ':') && (px[len-2] == ':') )
+    {
+        flog(LOG_DEBUG2, "Spotted double :: termination of prefix.");
+        px[len-1] = '\0';
+    }
+    
     len = strlen(px);
     switch (len) {
         case 5:
