@@ -169,14 +169,23 @@ int main(int argc, char *argv[])
 
 void dispatcher(void)
 {
-    struct pollfd   fds[MAXINTERFACES];
+    //struct pollfd   fds[MAXINTERFACES];
+    struct pollfd   *fds;
     unsigned int    msglen;
     unsigned char   msgdata[MAX_MSG_SIZE * 2];
     int             rc;
     int             fdIdx;
     int             consecutivePollErrors = 0;
     
-    memset(fds, 0, sizeof(fds));
+    //memset(fds, 0, sizeof(fds));
+    // To allow for large numbers of interfaces, without preallocating memory which
+    // would only be used in such cases, we dynamically allocate what is
+    // effectively an array here. Don't want it on the stack, but prefer it in the heap.
+    fds = (struct pollfd *)calloc( interfaceCount, sizeof(struct pollfd) );
+    // TODO
+    // Verify the sizing here in a test case
+    flog(LOG_DEBUG2, "Dynamically allocated %d bytes to the master FD array", 
+            sizeof(fds) );
     
     for(fdIdx=0; fdIdx < interfaceCount; fdIdx++)
     {
