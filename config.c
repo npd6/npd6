@@ -50,6 +50,7 @@ int readConfig(char *configFileName)
     int             prefixaddrlen, masklen=0;
     char            interfacestr[INTERFACE_STRLEN];
     char            *slashMarker;
+    int             approxInterfaces = 0;
 
     
     // Ensure global set correctly
@@ -62,7 +63,21 @@ int readConfig(char *configFileName)
         flog(LOG_ERR, "Can't open config file %s: %s", configFileName, strerror(errno));
         return (-1);
     }
-
+    // First of we need to whip through and count the number of "interface" strings to
+    // give us a worst-case/maximum size for the master data structures.
+    do {
+        if (fgets(linein, 128, configFileFD) == NULL)
+            break;
+        
+        // Quick check for the presence of the string "interface"
+        if ( strstr( linein, configStrs[NPD6INTERFACE]) )
+            approxInterfaces++;
+    } while (1);
+    flog(LOG_DEBUG2, "Sizing master interface data structure for %d interfaces.",
+         approxInterfaces);
+    
+    // Go back to the start of the file 
+    rewind(configFileFD);
     // This is real simple config file parsing...
     do {
         int strToken, strIdx;
