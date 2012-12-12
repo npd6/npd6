@@ -63,7 +63,7 @@
 #define USE_STD             3
 #define MAXTARGETS          1000000         // Ultimate sane limit
 #define LISTLOGGING         (listLog==1?LOG_INFO:LOG_DEBUG)
-#define MAXINTERFACES       8
+//#define MAXINTERFACES       8
 //*****************************************************************************
 // Globals
 //
@@ -91,7 +91,9 @@ struct npd6Interface {
     int             pktSock;
 };
 unsigned int    interfaceCount;         // Total number of interface/prefix combos
-struct  npd6Interface interfaces[MAXINTERFACES];
+//struct  npd6Interface interfaces[MAXINTERFACES];
+// We dynaimcally size this at run-time
+struct  npd6Interface *interfaces;
 
 // Key behaviour
 int             naLinkOptFlag;      // From config file NPD6OPTFLAG

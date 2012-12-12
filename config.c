@@ -65,6 +65,9 @@ int readConfig(char *configFileName)
     }
     // First of we need to whip through and count the number of "interface" strings to
     // give us a worst-case/maximum size for the master data structures.
+    // There will almost always be a few extra instances of this string in the file 
+    // and hence this value will typically be slightly bigger than required.
+    // However the amount of memory so "wasted" is pretty tiny, so I really don't care.
     do {
         if (fgets(linein, 128, configFileFD) == NULL)
             break;
@@ -75,6 +78,15 @@ int readConfig(char *configFileName)
     } while (1);
     flog(LOG_DEBUG2, "Sizing master interface data structure for %d interfaces.",
          approxInterfaces);
+    
+    interfaces = calloc( approxInterfaces, sizeof(struct npd6Interface) );
+    if (interfaces == NULL ) {
+        flog(LOG_ERR, "calloc failed - Terminating");
+        return (-1);
+    }
+    
+    flog(LOG_DEBUG2, "calloced %d bytes for the master interfaces data-structure", 
+            approxInterfaces * sizeof( struct npd6Interface)   );
     
     // Go back to the start of the file 
     rewind(configFileFD);
@@ -186,11 +198,11 @@ int readConfig(char *configFileName)
                     strncpy( interfaces[interfaceCount].nameStr, interfacestr, 
                              sizeof(interfaces[interfaceCount].nameStr) );
                     interfaceCount++;
-                    if ( interfaceCount > MAXINTERFACES )
-                    {
-                        flog(LOG_ERR, "Maximum %d interfaces permitted. Error.", MAXINTERFACES);
-                        return 1;
-                    }
+//                     if ( interfaceCount > MAXINTERFACES )
+//                     {
+//                         flog(LOG_ERR, "Maximum %d interfaces permitted. Error.", MAXINTERFACES);
+//                         return 1;
+//                     }
                     break;
 
                 case NPD6OPTFLAG:
@@ -397,7 +409,7 @@ int readConfig(char *configFileName)
         // Interface's link address
         if (getLinkaddress( interfaces[check].nameStr, interfaces[check].linkAddr) )
         {
-            flog(LOG_ERR, "Failed to match interface %s to a lnik-level address.", 
+            flog(LOG_ERR, "Failed to match interface %s to a link-level address.", 
                  interfaces[check].nameStr );
             return 1;
         }

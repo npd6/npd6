@@ -130,7 +130,8 @@ int main(int argc, char *argv[])
     {
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
-    }
+    } 
+    
     err = init_sockets();
     if (err) {
         flog(LOG_ERR, "init_sockets: failed to initialise %d sockets.", err);
