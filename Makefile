@@ -24,7 +24,7 @@
 VERSION=0.8.0
 
 CC=gcc
-CFLAGS=-c -Wall -g -O3 
+CFLAGS= -Wall -g -O3 
 LDFLAGS=
 SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c
 OBJECTS=$(SOURCES:.c=.o)
@@ -41,7 +41,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
