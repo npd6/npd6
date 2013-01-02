@@ -1,3 +1,17 @@
+npd6 (0.9.99) quantal; urgency=low
+
+  * BETA release! Use with caution!
+  * Bug 48. Allow use of ANY prefix.
+  * Bug 49. No limits interface numbers.
+  * Bug 50. Masks on the prefixes.
+  * Bug 51
+  * Bug 51 and 53. Substantial changes to building and packaging.
+  * Many minor fixes and debug changes.
+  * Sample config file updated.
+  * MAN pages updated.
+
+ -- Sean Groarke <sgroarke@gmail.com>  Wed, 02 Jan 2013 16:17:11 +0100
+
 npd6 (0.7.0) precise; urgency=low
 
     * Multi-interface support.

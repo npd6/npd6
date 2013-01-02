@@ -21,7 +21,7 @@
 # $Id$
 # $HeadURL$
 
-VERSION=0.8.0
+VERSION=0.9.99
 
 CC=gcc
 CFLAGS= -Wall -g -O3 
