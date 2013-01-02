@@ -69,7 +69,7 @@
 //
 char            *pname;
 char            *paramName;
-int             sockicmp;
+//int             sockicmp;
 int             sockpkt;
 int             debug;
 int             daemonize;
@@ -89,6 +89,7 @@ struct npd6Interface {
     unsigned char   linkAddr[6];
     unsigned int    multiStatus;
     int             pktSock;
+    int             icmpSock;
 };
 unsigned int    interfaceCount;         // Total number of interface/prefix combos
 //struct  npd6Interface interfaces[MAXINTERFACES];

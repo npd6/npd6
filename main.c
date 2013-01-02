@@ -182,15 +182,16 @@ void dispatcher(void)
     // To allow for large numbers of interfaces, without preallocating memory which
     // would only be used in such cases, we dynamically allocate what is
     // effectively an array here. Don't want it on the stack, but prefer it in the heap.
-    fds = (struct pollfd *)calloc( interfaceCount, sizeof(struct pollfd) );
+    fds = (struct pollfd *)calloc( interfaceCount+1, sizeof(struct pollfd) );
     // TODO
     // Verify the sizing here in a test case
     flog(LOG_DEBUG2, "Dynamically allocated %d bytes to the master FD array", 
-            sizeof(fds) );
+            (interfaceCount+1) * sizeof(struct pollfd) );
     
     for(fdIdx=0; fdIdx < interfaceCount; fdIdx++)
     {
         fds[fdIdx].fd = interfaces[fdIdx].pktSock;
+        flog(LOG_DEBUG2, "pktSock value is: %d", fds[fdIdx].fd );
         fds[fdIdx].events = POLLIN;
         fds[fdIdx].revents = 0;
     }
@@ -201,7 +202,7 @@ void dispatcher(void)
  
     for (;;)
     {
-        rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);
+        rc = poll(fds, interfaceCount+1, DISPATCH_TIMEOUT);
         flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
         
         if (rc > 0)

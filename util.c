@@ -502,9 +502,8 @@ void dropdead(void)
     {
         if_allmulti(interfaces[loop].nameStr, interfaces[loop].multiStatus);
         close( interfaces[loop].pktSock );
+        close( interfaces[loop].icmpSock );
     }
-
-    close(sockicmp);
 
     flog(LOG_ERR, "Tidied up. Goodbye cruel world.");
     exit(0);

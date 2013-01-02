@@ -294,7 +294,7 @@ sinfulexit:
 int init_sockets(void)
 {
     int errcount = 0;
-    int loop, sock;
+    int loop, sock, sockicmp;
 
     /* Raw socket for receiving NSs */
     for (loop=0; loop < interfaceCount; loop++)
@@ -308,16 +308,18 @@ int init_sockets(void)
         }
         interfaces[loop].pktSock = sock;
         flog(LOG_DEBUG, "open_packet_socket: %d OK.", loop);
+        flog(LOG_DEBUG2, "open_packet_socket value = %d", sock);
+    
+        /* ICMPv6 socket for sending NAs */
+        sockicmp = open_icmpv6_socket();
+        if (sockicmp < 0)
+        {
+            flog(LOG_ERR, "open_icmpv6_socket: failed.");
+            errcount++;
+        }
+        flog(LOG_DEBUG, "open_icmpv6_socket: OK.");
+        interfaces[loop].icmpSock = sockicmp;
     }
-
-    /* ICMPv6 socket for sending NAs */
-    sockicmp = open_icmpv6_socket();
-    if (sockicmp < 0)
-    {
-        flog(LOG_ERR, "open_icmpv6_socket: failed.");
-        errcount++;
-    }
-    flog(LOG_DEBUG, "open_icmpv6_socket: OK.");
-
+    
     return errcount;
 }

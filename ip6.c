@@ -219,7 +219,7 @@ void processNS( int ifIndex,
             flog(LOG_DEBUG, "Store target to list.");
             storeTarget( targetaddr );
         }
-        
+
         // Start building up the header for the packet
         memset(( void *)&sockaddr, 0, sizeof(struct sockaddr_in6));
         sockaddr.sin6_family = AF_INET6;
@@ -295,7 +295,7 @@ void processNS( int ifIndex,
 
         flog(LOG_DEBUG2, "Outbound message built");
 
-        err = sendmsg( sockicmp, &mhdr, 0);
+        err = sendmsg( interfaces[ifIndex].icmpSock, &mhdr, 0);
         if (err < 0)
             flog(LOG_ERR, "sendmsg returned with error %d = %s", errno, strerror(errno));
         else
