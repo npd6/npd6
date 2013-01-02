@@ -24,7 +24,7 @@
 VERSION=0.8.0
 
 CC=gcc
-CFLAGS=-c -Wall -g -O3 -DINCLUDE_IP_ADDRESS_SUPPORT
+CFLAGS=-c -Wall -g -O3 
 LDFLAGS=
 SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c
 OBJECTS=$(SOURCES:.c=.o)

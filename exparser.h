@@ -89,7 +89,6 @@ char* exp_get_library_version();
 int   exp_parse_expression(exp_pstat_t* pstat, char* expr, unsigned long long* result);
 int   exp_set_mapped_value(exp_pstat_t* pstat, char* name, unsigned long long value);
 
-#ifdef INCLUDE_IP_ADDRESS_SUPPORT
 unsigned long long exp_ipv6_prefix_to_ull(struct in6_addr* ipv6);
 unsigned long long exp_ipv6_host_to_ull(struct in6_addr* ipv6);
 void exp_pull_hull_to_ipv6(unsigned long long prefix, unsigned long long host, struct in6_addr* ipv6);
@@ -102,7 +101,6 @@ void exp_ipv6_addr_to_string(struct in6_addr* ipv6, char* ipv6_str, int length);
 void exp_ipv4_string_to_addr(char* ipv4_str, struct in_addr* ipv4);
 void exp_ipv4_addr_to_string(struct in_addr* ipv4, char* ipv4_str, int length);
 
-#endif // INCLUDE_IP_ADDRESS_SUPPORT
 
 #ifdef __cplusplus
 }
