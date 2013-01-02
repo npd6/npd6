@@ -143,6 +143,7 @@ int readConfig(char *configFileName)
                     // The prefix may be optionally specified with a mask.
                     // e.g. 1:2:3:: or 1:2:3::/12
                     slashMarker = strchr( prefixaddrstr, '/');
+                    masklen = 9999;
                     if (slashMarker != NULL)
                     {
                         // We found a mask marker
@@ -163,7 +164,7 @@ int readConfig(char *configFileName)
                         return 1;
                     }
                     // If no mask specified, assume a default value
-                    if ( masklen == 0 )
+                    if ( masklen == 9999 )
                     {
                         flog(LOG_INFO, "No mask specified. Assuming mask length %d", prefixaddrlen);
                         masklen = prefixaddrlen;
@@ -375,7 +376,8 @@ int readConfig(char *configFileName)
     // Basic check: did we have the same number of interfaces as prefixes?
     if ( interfaceCount != prefixCount )
     {
-        flog(LOG_ERR, "Must have same number of prefixes as interfaces. Error in config.");
+        flog(LOG_ERR, "Must have same number of prefixes as interfaces. Interfaces = %d, Prefixes = %d",
+            interfaceCount, prefixCount);
         return 1;
     }
     // Did we have ANY interfaces?
