@@ -34,6 +34,7 @@ INSTALL_PREFIX=/usr/local
 MAN_PREFIX=/usr/share/man
 DEBIAN=debian/
 TARGZ=npd6-$(VERSION)
+DEV:= -D'BUILDREV="$(VERSION).$(shell svnversion -n .)"'
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -41,7 +42,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEV) -c $< -o $@
 
 clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
