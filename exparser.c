@@ -90,10 +90,8 @@
 #include <ctype.h>
 #include <sys/types.h>
 
-#ifdef INCLUDE_IP_ADDRESS_SUPPORT
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#endif
 
 #include "exparser.h"
 
@@ -656,7 +654,6 @@ exp_parse_expression(exp_pstat_t* pstat, char* expr, unsigned long long* result)
   return 0;
 }
 
-#ifdef INCLUDE_IP_ADDRESS_SUPPORT
 unsigned long long
 exp_ipv6_prefix_to_ull(struct in6_addr* ipv6)
 {
@@ -750,5 +747,4 @@ exp_ipv4_addr_to_string(struct in_addr* ipv4, char* ipv4_str, int length)
   inet_ntop(AF_INET, ipv4, ipv4_str, (socklen_t)length);
 }
 
-#endif
 

@@ -1,26 +1,26 @@
 /*
- *   This software is Copyright 2011 by Sean Groarke <sgroarke@gmail.com>
- *   All rights reserved.
- *
- *   This file is part of npd6.
- *
- *   npd6 is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   npd6 is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with npd6.  If not, see <http://www.gnu.org/licenses/>.
- */
+*   This software is Copyright 2011 by Sean Groarke <sgroarke@gmail.com>
+*   All rights reserved.
+*
+*   This file is part of npd6.
+*
+*   npd6 is free software: you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
+*
+*   npd6 is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with npd6.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 /* $Id$
- * $HeadURL$
- */
+* $HeadURL$
+*/
 
 #include "includes.h"
 #include "npd6.h"
@@ -130,7 +130,8 @@ int main(int argc, char *argv[])
     {
         flog(LOG_ERR, "Error in config file: %s", configfile);
         return 1;
-    }
+    } 
+    
     err = init_sockets();
     if (err) {
         flog(LOG_ERR, "init_sockets: failed to initialise %d sockets.", err);
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
     {
         interfaces[loop].multiStatus = if_allmulti(interfaces[loop].nameStr, TRUE);
     }
-  
+
     /* Seems like about the right time to daemonize (or not) */
     if (daemonize)
     {
@@ -169,18 +170,21 @@ int main(int argc, char *argv[])
 
 void dispatcher(void)
 {
-    struct pollfd   fds[MAXINTERFACES];
+    struct pollfd   *fds;
     unsigned int    msglen;
     unsigned char   msgdata[MAX_MSG_SIZE * 2];
     int             rc;
     int             fdIdx;
     int             consecutivePollErrors = 0;
     
-    memset(fds, 0, sizeof(fds));
+    fds = (struct pollfd *)calloc( interfaceCount+1, sizeof(struct pollfd) );
+    flog(LOG_DEBUG2, "Dynamically allocated %d bytes to the master FD array", 
+            (interfaceCount+1) * sizeof(struct pollfd) );
     
     for(fdIdx=0; fdIdx < interfaceCount; fdIdx++)
     {
         fds[fdIdx].fd = interfaces[fdIdx].pktSock;
+        flog(LOG_DEBUG2, "pktSock value is: %d", fds[fdIdx].fd );
         fds[fdIdx].events = POLLIN;
         fds[fdIdx].revents = 0;
     }
@@ -188,10 +192,10 @@ void dispatcher(void)
     fds[interfaceCount].fd = -1;
     fds[interfaceCount].events = 0;
     fds[interfaceCount].revents = 0;
- 
+
     for (;;)
     {
-        rc = poll(fds, sizeof(fds)/sizeof(fds[0]), DISPATCH_TIMEOUT);
+        rc = poll(fds, interfaceCount+1, DISPATCH_TIMEOUT);
         flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
         
         if (rc > 0)
@@ -209,13 +213,13 @@ void dispatcher(void)
                     continue;
                 }
                 
-                // If it wasn't a POLLIN, it is likely an signifciant error
+                // If it wasn't a POLLIN, it is likely an significant error
                 if (fds[fdIdx].revents & (POLLERR | POLLHUP | POLLNVAL) )
                 {
                     flog(LOG_WARNING, "Major socket error on fds %d", fdIdx);
                     // Try and recover... long shot
                     close(interfaces[fdIdx].pktSock);
-                    sleep(1);   // TODO NO!!!
+                    sleep(1);
                     interfaces[fdIdx].pktSock = open_packet_socket(interfaces[fdIdx].index);
                     if ( interfaces[fdIdx].pktSock < 0)
                     {
@@ -228,35 +232,37 @@ void dispatcher(void)
                     fds[fdIdx].revents = 0;
 
                     // Have we had more consecutive errors than the threshold value?
-		    consecutivePollErrors++;
+                    consecutivePollErrors++;
                     if ((pollErrorLimit > 0) && (consecutivePollErrors >= pollErrorLimit) )
                     {
                         flog(LOG_ERR, "dispatcher(): %d consecutive major poll errors. Terminating.",
                             consecutivePollErrors);
-			dropdead();
+                        dropdead();
                     }
 
                     continue;
                 }
             }
-	    continue;
+        continue;
         }
         else if ( rc == 0 )
         {
-            flog(LOG_DEBUG, "Stale select - Timed out. Low activity.");
-	    consecutivePollErrors = 0; // Using the select timeout as our quantum of error counting
+            flog(LOG_DEBUG, "Stale select - Idling....... Low activity........");
+            consecutivePollErrors = 0; // Using the select timeout as our quantum of error counting
             // Timer fired?
             // One day. If we implement timers.
         }
         else if ( rc == -1 )
         {
-	    /* Truly an error or maybe we processed a signal?*/
-	    if ( errno == EINTR )
-	    {
-		flog(LOG_ERR, "Broke out of the poll() via a signal event.");
-	    } else {
-            	flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
-	    }
+            /* Truly an error or maybe we processed a signal?*/
+            if ( errno == EINTR )
+            {
+                flog(LOG_ERR, "Broke out of the poll() via a signal event.");
+            }
+            else
+            {
+                flog(LOG_ERR, "Weird poll error: %s", strerror(errno));
+            }
             continue;
         }
         

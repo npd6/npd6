@@ -63,7 +63,7 @@ void usersignal(int mysig)
         case SIGHUP:
             signal(SIGUSR2, usersignal);
             flog(LOG_DEBUG, "called with HUP");
-            /* TODO action? */
+            /* action? */
             break;
         case SIGINT:
         case SIGTERM:
@@ -302,7 +302,7 @@ int prefixset(char px[])
         {
             strcpy( suffix, &px[c1]);       // Grab the tail
             memset(&px[c1], '0', missing);  // pad it with missing zeros
-            px[c1+missing] = '\0';          // Reterminate
+            px[c1+missing] = '\0';          // Re-terminate
             strcat(px, suffix);             // Add the tail back
         }
     }
@@ -353,7 +353,6 @@ int prefixset(char px[])
 /*****************************************************************************
  * stripwhitespace
  *  Tidy up lines of text from the config file.
- * BUG 32 - Rewite. original had v ugly bug...
  *
  * Inputs:
  *  char * str
@@ -417,7 +416,7 @@ void dumpHex(unsigned char *data, unsigned int len)
  *
  * Inputs:
  *  char * iface
- *      String containg the interface name (e.g. "eth1")
+ *      String containing the interface name (e.g. "eth1")
  *
  * Outputs:
  *  unsigned char * link
@@ -486,8 +485,8 @@ int openLog(char *logFileName)
 // Just display the version and return.
 void showVersion(void)
 {
-    printf("npd6 - version %s\n", VERSIONSTRING);
-    printf("\nCopyright (C) 2011-2012 Sean Groarke\n\n");
+    printf("npd6 - version %s\n", BUILDREV);
+    printf("\nCopyright (C) 2011-2013 Sean Groarke\n\n");
 }
 
 
@@ -496,17 +495,15 @@ void dropdead(void)
     int loop;
     
     /* We're dying, so tidy up*/
-
     /* Restore interface flags and close sockets */
     for (loop=0; loop<interfaceCount; loop++)
     {
         if_allmulti(interfaces[loop].nameStr, interfaces[loop].multiStatus);
         close( interfaces[loop].pktSock );
+        close( interfaces[loop].icmpSock );
     }
 
-    close(sockicmp);
-
-    flog(LOG_ERR, "Tidied up. Goodbye cruel world.");
+    flog(LOG_ERR, "Tidied up and now exiting. Goodbye.");
     exit(0);
 }
 
@@ -567,7 +564,7 @@ void storeTarget(struct in6_addr *newTarget)
 {
     struct in6_addr *ptr;
 
-    // Take a permanenet copy of the target
+    // Take a permanent copy of the target
     ptr = (struct in6_addr *)malloc(sizeof(struct in6_addr) );
     if (!ptr)
     {

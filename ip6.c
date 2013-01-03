@@ -219,7 +219,7 @@ void processNS( int ifIndex,
             flog(LOG_DEBUG, "Store target to list.");
             storeTarget( targetaddr );
         }
-        
+
         // Start building up the header for the packet
         memset(( void *)&sockaddr, 0, sizeof(struct sockaddr_in6));
         sockaddr.sin6_family = AF_INET6;
@@ -295,7 +295,7 @@ void processNS( int ifIndex,
 
         flog(LOG_DEBUG2, "Outbound message built");
 
-        err = sendmsg( sockicmp, &mhdr, 0);
+        err = sendmsg( interfaces[ifIndex].icmpSock, &mhdr, 0);
         if (err < 0)
             flog(LOG_ERR, "sendmsg returned with error %d = %s", errno, strerror(errno));
         else
@@ -336,11 +336,9 @@ int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
     
     // The approach here is to gallop along the address comparing full octets for as far as possible.
     // Then when/if we reach a non-octet aligned point, we deal with that.
-    // Since vast majority of folks will have octet aligned prefixes, this is highly efficient, and
-    // anyway the non-octete aligned code is pretty light too...
+    // Since vast majority of folks will have octet aligned prefixes, this is highly efficient
     for (bdx=bits, idx=0; bdx>0; bdx-=8, idx++)
     {
-      
         if (bdx >= 8)
         {
             // We can compare a full 8-bit comparison - no masking yet

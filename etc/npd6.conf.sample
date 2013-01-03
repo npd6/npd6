@@ -1,6 +1,3 @@
-// Please check the man pages for full details of this config file.
-// Below are some examples and suggestions, but the full details are
-// in the man page.
 // npd6 config file
 
 // The prefix portion that we will match on
@@ -10,22 +7,24 @@ prefix=2222:1111:2222:3333:
 // Which interface are we monitoring and using?
 interface = eth0
 
-// add additional prefix and interface pairs as required - up to 8
+// Note that a (probably) unlimited number of prefix/interface
+// pairs can be used. Also note that the prefix can be set to 
+// 0::/0 which in effect matches anything at all.  
+
+// **CHECK THE MAN PAGES FOR MORE!
 
 
 //**********************************
 //*** Black/Whitelisting ***********
-// If 'none' (the default) any NS matching the prefix will
-// be answered with a Neighbor Advertisement. i.e. no blacklisting
-// or whitelisting is performed at all.
+// If 'none' (the default) any NS matching the prefix gets a reply.
 // If 'black', then any NS *except* those entires given, will
-// be answered by a Neighbor Advertisement (if the prefix matches)
+//  be answered by a Neighbor Advertisement (if the prefix matches)
 // If 'white', then *only* NS with a target of one of the
-// entries will be answered by a Neighbor Advertisement (if the 
-// prefix matches)
+//  entries will be answered by a Neighbor Advertisement (if the 
+//  prefix matches)
 //
 // Most folks will want the default, at least to get things going.
-//
+// **MAN PAGES FOR MORE!**
 listtype = none
 // listtype = black
 // listtype = white
@@ -36,15 +35,18 @@ listtype = none
 //. (add as many addrlist entires as desired)
 // Format: must be a 128-bit address, but all formats
 // accepted, e.g. 2a01::22, 2a01::0022, etc.
-// 
+
+
+ 
 // Pattern matching is also supported, via use of
 // exprlist = <expression to match>
 // *Please* check the man page and/or web site for more details
 // on this. It's very powerful but needs a little thought first! It's 
 // not just simple regexps.
-//
+
+
 // If we're using black or white lists, this controls whether to 
-// log matches or not (if we're not using debug mode, then they get
+// log matches or not (if we're using debug mode, then they get
 // logged anyway)
 listlogging = off
 

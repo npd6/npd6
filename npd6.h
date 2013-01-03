@@ -24,8 +24,6 @@
 
 #ifndef NPD6_H
 
-#define	VERSIONSTRING	"0.5.2"
-
 #define NPD6_H
 #include "includes.h"
 
@@ -63,13 +61,12 @@
 #define USE_STD             3
 #define MAXTARGETS          1000000         // Ultimate sane limit
 #define LISTLOGGING         (listLog==1?LOG_INFO:LOG_DEBUG)
-#define MAXINTERFACES       8
+#define NOMASK		    9999
 //*****************************************************************************
 // Globals
 //
 char            *pname;
 char            *paramName;
-int             sockicmp;
 int             sockpkt;
 int             debug;
 int             daemonize;
@@ -89,9 +86,11 @@ struct npd6Interface {
     unsigned char   linkAddr[6];
     unsigned int    multiStatus;
     int             pktSock;
+    int             icmpSock;
 };
 unsigned int    interfaceCount;         // Total number of interface/prefix combos
-struct  npd6Interface interfaces[MAXINTERFACES];
+// We dynaimcally size this at run-time
+struct  npd6Interface *interfaces;
 
 // Key behaviour
 int             naLinkOptFlag;      // From config file NPD6OPTFLAG

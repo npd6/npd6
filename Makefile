@@ -21,8 +21,10 @@
 # $Id$
 # $HeadURL$
 
+VERSION=1.0.0
+
 CC=gcc
-CFLAGS=-c -Wall -g -O3 -DINCLUDE_IP_ADDRESS_SUPPORT
+CFLAGS= -Wall -g -O3 
 LDFLAGS=
 SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c
 OBJECTS=$(SOURCES:.c=.o)
@@ -31,6 +33,8 @@ EXECUTABLE=npd6
 INSTALL_PREFIX=/usr/local
 MAN_PREFIX=/usr/share/man
 DEBIAN=debian/
+TARGZ=npd6-$(VERSION)
+DEV:= -D'BUILDREV="$(VERSION).$(shell svnversion -n .)"'
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -38,7 +42,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(DEV) -c $< -o $@
 
 clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)
@@ -77,4 +81,28 @@ debian: all
 	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
 	#dpkg-deb --build debian .
-	debuild -I -us -uc
+	debuild -I -us -uc 
+
+debchange:
+	dch -v $(VERSION) $(change)
+
+debrelease:
+	dch --release -M
+
+targz:
+	mkdir ../$(TARGZ)
+	mkdir ../$(TARGZ)/man
+	mkdir ../$(TARGZ)/etc
+	mkdir ../$(TARGZ)/debian
+	cp man/* ../$(TARGZ)/man
+	cp etc/* ../$(TARGZ)/etc
+	cp *.c ../$(TARGZ)/
+	cp *.h ../$(TARGZ)/
+	cp INSTALL ../$(TARGZ)
+	cp debian/c* ../$(TARGZ)/debian
+	cp debian/rules ../$(TARGZ)/debian
+	cp Makefile ../$(TARGZ)/
+	tar -cvf ../$(TARGZ).tar ../$(TARGZ)/*
+	gzip ../$(TARGZ).tar
+	rm -r ../$(TARGZ)/
+

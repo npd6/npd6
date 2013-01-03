@@ -30,9 +30,6 @@
 
 //*******************************************************
 // Take supplied filename and open it, then parse the contents.
-// Upon return following set:
-//
-// OR we failed -1.
 int readConfig(char *configFileName)
 {
     char linein[256];
@@ -50,6 +47,7 @@ int readConfig(char *configFileName)
     int             prefixaddrlen, masklen=0;
     char            interfacestr[INTERFACE_STRLEN];
     char            *slashMarker;
+    int             approxInterfaces = 0;
 
     
     // Ensure global set correctly
@@ -62,7 +60,33 @@ int readConfig(char *configFileName)
         flog(LOG_ERR, "Can't open config file %s: %s", configFileName, strerror(errno));
         return (-1);
     }
-
+    // First of we need to whip through and count the number of "interface" strings to
+    // give us a worst-case/maximum size for the master data structures.
+    // There will almost always be a few extra instances of this string in the file 
+    // and hence this value will typically be slightly bigger than required.
+    // However the amount of memory so "wasted" is pretty tiny, so I really don't care.
+    do {
+        if (fgets(linein, 128, configFileFD) == NULL)
+            break;
+        
+        // Quick check for the presence of the string "interface"
+        if ( strstr( linein, configStrs[NPD6INTERFACE]) )
+            approxInterfaces++;
+    } while (1);
+    flog(LOG_DEBUG2, "Sizing master interface data structure for %d interfaces.",
+         approxInterfaces);
+    
+    interfaces = calloc( approxInterfaces, sizeof(struct npd6Interface) );
+    if (interfaces == NULL ) {
+        flog(LOG_ERR, "calloc failed - Terminating");
+        return (-1);
+    }
+    
+    flog(LOG_DEBUG2, "calloced %d bytes for the master interfaces data-structure", 
+            approxInterfaces * sizeof( struct npd6Interface)   );
+    
+    // Go back to the start of the file 
+    rewind(configFileFD);
     // This is real simple config file parsing...
     do {
         int strToken, strIdx;
@@ -104,7 +128,7 @@ int readConfig(char *configFileName)
 
             // If config params are being added, it should only be required
             // to update the strings in npd6config.h and then insert a
-            // case XXXXXXX: here with self-contined code inside.
+            // case XXXXXXX: here with self-contained code inside.
             switch (strIdx) {
                 case NOMATCH:
                     flog(LOG_DEBUG2, "Found noise in config file. Skipping.");
@@ -116,11 +140,12 @@ int readConfig(char *configFileName)
                     // The prefix may be optionally specified with a mask.
                     // e.g. 1:2:3:: or 1:2:3::/12
                     slashMarker = strchr( prefixaddrstr, '/');
+                    masklen = NOMASK;
                     if (slashMarker != NULL)
                     {
                         // We found a mask marker
                         masklen = atoi(slashMarker + 1);
-                        // Reterminate prefix
+                        // Re-terminate prefix
                         flog(LOG_DEBUG2, "Pre: %s", prefixaddrstr);
                         slashMarker[0] = '\0';
                         flog(LOG_DEBUG2, "Post: %s", prefixaddrstr);
@@ -129,17 +154,20 @@ int readConfig(char *configFileName)
                     // We need to pad it up and record the length in bits
                     prefixaddrlen = prefixset(prefixaddrstr);
                     flog(LOG_INFO, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
-                    flog(LOG_INFO, "Mask specified: %d", masklen);
                     if ( prefixaddrlen <= 0 )
                     {
                         flog(LOG_ERR, "Invalid prefix.");
                         return 1;
                     }
                     // If no mask specified, assume a default value
-                    if ( masklen == 0 )
+                    if ( masklen == NOMASK )
                     {
                         flog(LOG_INFO, "No mask specified. Assuming mask length %d", prefixaddrlen);
                         masklen = prefixaddrlen;
+                    }
+                    else
+                    {
+                        flog(LOG_INFO, "Mask length specified: %d", masklen);
                     }
                     // If specified mask length at odds with the prefix itself, flag it
                     // i.e. if the mask specified is not on a 16-bit boundary. Quite legal, but likely
@@ -171,11 +199,6 @@ int readConfig(char *configFileName)
                     strncpy( interfaces[interfaceCount].nameStr, interfacestr, 
                              sizeof(interfaces[interfaceCount].nameStr) );
                     interfaceCount++;
-                    if ( interfaceCount > MAXINTERFACES )
-                    {
-                        flog(LOG_ERR, "Maximum %d interfaces permitted. Error.", MAXINTERFACES);
-                        return 1;
-                    }
                     break;
 
                 case NPD6OPTFLAG:
@@ -344,11 +367,11 @@ int readConfig(char *configFileName)
             }
     } while (len);
 
-
     // Basic check: did we have the same number of interfaces as prefixes?
     if ( interfaceCount != prefixCount )
     {
-        flog(LOG_ERR, "Must have same number of prefixes as interfaces. Error in config.");
+        flog(LOG_ERR, "Must have same number of prefixes as interfaces. Interfaces = %d, Prefixes = %d",
+            interfaceCount, prefixCount);
         return 1;
     }
     // Did we have ANY interfaces?
@@ -364,7 +387,6 @@ int readConfig(char *configFileName)
     for (check = 0; check < interfaceCount; check ++)
     {
         unsigned int    interfaceIdx;
-        //unsigned char   linkAddr[6];
         
         // Interface index number
         interfaceIdx = if_nametoindex( interfaces[check].nameStr );
@@ -382,7 +404,7 @@ int readConfig(char *configFileName)
         // Interface's link address
         if (getLinkaddress( interfaces[check].nameStr, interfaces[check].linkAddr) )
         {
-            flog(LOG_ERR, "Failed to match interface %s to a lnik-level address.", 
+            flog(LOG_ERR, "Failed to match interface %s to a link-level address.", 
                  interfaces[check].nameStr );
             return 1;
         }
