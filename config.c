@@ -143,7 +143,7 @@ int readConfig(char *configFileName)
                     // The prefix may be optionally specified with a mask.
                     // e.g. 1:2:3:: or 1:2:3::/12
                     slashMarker = strchr( prefixaddrstr, '/');
-                    masklen = 9999;
+                    masklen = NOMASK;
                     if (slashMarker != NULL)
                     {
                         // We found a mask marker
@@ -157,18 +157,21 @@ int readConfig(char *configFileName)
                     // We need to pad it up and record the length in bits
                     prefixaddrlen = prefixset(prefixaddrstr);
                     flog(LOG_INFO, "Padded prefix: %s, length = %d", prefixaddrstr, prefixaddrlen);
-                    flog(LOG_INFO, "Mask specified: %d", masklen);
                     if ( prefixaddrlen <= 0 )
                     {
                         flog(LOG_ERR, "Invalid prefix.");
                         return 1;
                     }
                     // If no mask specified, assume a default value
-                    if ( masklen == 9999 )
+                    if ( masklen == NOMASK )
                     {
                         flog(LOG_INFO, "No mask specified. Assuming mask length %d", prefixaddrlen);
                         masklen = prefixaddrlen;
                     }
+		    else
+		    {
+			flog(LOG_INFO, "Mask length specified: %d", masklen);
+		    }
                     // If specified mask length at odds with the prefix itself, flag it
                     // i.e. if the mask specified is not on a 16-bit boundary. Quite legal, but likely
                     // not common
