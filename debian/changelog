@@ -1,3 +1,10 @@
+npd6 (1.0.0) quantal; urgency=low
+
+  * Merge DEV to TRUNK - Lots of changes and fixes.
+  * Version bump to 1.0.0
+
+ -- Sean Groarke <sgroarke@gmail.com>  Thu, 03 Jan 2013 10:03:18 +0100
+
 npd6 (0.9.99) quantal; urgency=low
 
   * BETA release! Use with caution!
