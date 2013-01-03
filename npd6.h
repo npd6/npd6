@@ -62,13 +62,11 @@
 #define MAXTARGETS          1000000         // Ultimate sane limit
 #define LISTLOGGING         (listLog==1?LOG_INFO:LOG_DEBUG)
 #define NOMASK		    9999
-//#define MAXINTERFACES       8
 //*****************************************************************************
 // Globals
 //
 char            *pname;
 char            *paramName;
-//int             sockicmp;
 int             sockpkt;
 int             debug;
 int             daemonize;
@@ -91,7 +89,6 @@ struct npd6Interface {
     int             icmpSock;
 };
 unsigned int    interfaceCount;         // Total number of interface/prefix combos
-//struct  npd6Interface interfaces[MAXINTERFACES];
 // We dynaimcally size this at run-time
 struct  npd6Interface *interfaces;
 

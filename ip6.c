@@ -336,11 +336,9 @@ int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
     
     // The approach here is to gallop along the address comparing full octets for as far as possible.
     // Then when/if we reach a non-octet aligned point, we deal with that.
-    // Since vast majority of folks will have octet aligned prefixes, this is highly efficient, and
-    // anyway the non-octete aligned code is pretty light too...
+    // Since vast majority of folks will have octet aligned prefixes, this is highly efficient
     for (bdx=bits, idx=0; bdx>0; bdx-=8, idx++)
     {
-      
         if (bdx >= 8)
         {
             // We can compare a full 8-bit comparison - no masking yet

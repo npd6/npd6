@@ -25,7 +25,7 @@
 #ifndef INCLUDES_H
 #define INCLUDES_H
 
-/* whether compiling on Linux, glibc>=2.8 doesn't expose in6_pktinfo
+/* On Linux, glibc>=2.8 doesn't expose in6_pktinfo
    otherwise.. */
 #define _GNU_SOURCE /**/
 

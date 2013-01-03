@@ -30,9 +30,6 @@
 
 //*******************************************************
 // Take supplied filename and open it, then parse the contents.
-// Upon return following set:
-//
-// OR we failed -1.
 int readConfig(char *configFileName)
 {
     char linein[256];
@@ -131,7 +128,7 @@ int readConfig(char *configFileName)
 
             // If config params are being added, it should only be required
             // to update the strings in npd6config.h and then insert a
-            // case XXXXXXX: here with self-contined code inside.
+            // case XXXXXXX: here with self-contained code inside.
             switch (strIdx) {
                 case NOMATCH:
                     flog(LOG_DEBUG2, "Found noise in config file. Skipping.");
@@ -148,7 +145,7 @@ int readConfig(char *configFileName)
                     {
                         // We found a mask marker
                         masklen = atoi(slashMarker + 1);
-                        // Reterminate prefix
+                        // Re-terminate prefix
                         flog(LOG_DEBUG2, "Pre: %s", prefixaddrstr);
                         slashMarker[0] = '\0';
                         flog(LOG_DEBUG2, "Post: %s", prefixaddrstr);
@@ -168,10 +165,10 @@ int readConfig(char *configFileName)
                         flog(LOG_INFO, "No mask specified. Assuming mask length %d", prefixaddrlen);
                         masklen = prefixaddrlen;
                     }
-		    else
-		    {
-			flog(LOG_INFO, "Mask length specified: %d", masklen);
-		    }
+                    else
+                    {
+                        flog(LOG_INFO, "Mask length specified: %d", masklen);
+                    }
                     // If specified mask length at odds with the prefix itself, flag it
                     // i.e. if the mask specified is not on a 16-bit boundary. Quite legal, but likely
                     // not common
@@ -202,11 +199,6 @@ int readConfig(char *configFileName)
                     strncpy( interfaces[interfaceCount].nameStr, interfacestr, 
                              sizeof(interfaces[interfaceCount].nameStr) );
                     interfaceCount++;
-//                     if ( interfaceCount > MAXINTERFACES )
-//                     {
-//                         flog(LOG_ERR, "Maximum %d interfaces permitted. Error.", MAXINTERFACES);
-//                         return 1;
-//                     }
                     break;
 
                 case NPD6OPTFLAG:
@@ -375,7 +367,6 @@ int readConfig(char *configFileName)
             }
     } while (len);
 
-
     // Basic check: did we have the same number of interfaces as prefixes?
     if ( interfaceCount != prefixCount )
     {
@@ -396,7 +387,6 @@ int readConfig(char *configFileName)
     for (check = 0; check < interfaceCount; check ++)
     {
         unsigned int    interfaceIdx;
-        //unsigned char   linkAddr[6];
         
         // Interface index number
         interfaceIdx = if_nametoindex( interfaces[check].nameStr );
