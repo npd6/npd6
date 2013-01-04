@@ -21,7 +21,7 @@
 # $Id$
 # $HeadURL$
 
-VERSION=1.0.0
+VERSION=1.0.1
 
 CC=gcc
 CFLAGS= -Wall -g -O3 
@@ -67,6 +67,21 @@ install: all
 	cp npd6 $(DESTDIR)$(INSTALL_PREFIX)/bin/
 	cp man/npd6.conf.5.gz $(DESTDIR)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DESTDIR)$(MAN_PREFIX)/man8/
+
+ubuntu: all
+	mkdir $(DEBIAN)/DEBIAN/
+	cp $(DEBIAN)/c* $(DEBIAN)/DEBIAN/
+	mkdir -p $(DEBIAN)/etc/init.d/
+	mkdir -p $(DEBIAN)$(INSTALL_PREFIX)/bin/
+	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man5/
+	mkdir -p $(DEBIAN)$(MAN_PREFIX)/man8/
+	cp etc/npd6 $(DEBIAN)/etc/init.d/npd6
+	cp etc/npd6.conf.sample $(DEBIAN)/etc/npd6.conf.sample
+	cp npd6 $(DEBIAN)$(INSTALL_PREFIX)/bin/
+	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
+	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
+	debuild -S -k93C35BB8
+
 
 debian: all
 	mkdir $(DEBIAN)/DEBIAN/

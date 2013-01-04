@@ -1,3 +1,9 @@
+npd6 (1.0.1) quantal; urgency=low
+
+  * Massage into Launchpad-suitable form
+
+ -- Sean Groarke <sgroarke@gmail.com>  Fri, 04 Jan 2013 15:47:20 +0100
+
 npd6 (1.0.0) quantal; urgency=low
 
   * Merge DEV to TRUNK - Lots of changes and fixes.
