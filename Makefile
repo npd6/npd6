@@ -30,7 +30,7 @@ SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=includes.h npd6.h
 EXECUTABLE=npd6
-INSTALL_PREFIX=/usr/local
+INSTALL_PREFIX=/usr
 MAN_PREFIX=/usr/share/man
 DEBIAN=debian/
 TARGZ=npd6-$(VERSION)
@@ -80,7 +80,6 @@ debian: all
 	cp npd6 $(DEBIAN)$(INSTALL_PREFIX)/bin/
 	cp man/npd6.conf.5.gz $(DEBIAN)$(MAN_PREFIX)/man5/
 	cp man/npd6.8.gz $(DEBIAN)$(MAN_PREFIX)/man8/
-	#dpkg-deb --build debian .
 	debuild -I -us -uc 
 
 debchange:

@@ -1,8 +1,8 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          npd6
-# Required-Start:    $remote_fs $syslog
-# Required-Stop:     $remote_fs $syslog
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog	$network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 ### END INIT INFO
@@ -13,10 +13,10 @@
 
 # Do NOT "set -e"
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="npd6 - Neighbor proxy Daemon IPv6"
 NAME=npd6
-DAEMON=/usr/local/bin/$NAME
+DAEMON=/usr/bin/$NAME
 # Check man page or --help to get more optional arguments
 #DAEMON_ARGS="--debug -l /var/log/npd6.log"
 DAEMON_ARGS=""

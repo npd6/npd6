@@ -2,8 +2,8 @@ Source: npd6
 Section: net
 Priority: optional
 Maintainer: Sean Groarke <sgroarke@gmail.com>
-Build-Depends: debhelper (>= 8.0.0), cdbs (>= 0.4.51), debhelper (>= 6), quilt
-Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 8.0.0), debhelper (>= 6)
+Standards-Version: 3.9.3
 Homepage: https://code.google.com/p/npd6/
 
 Package: npd6
