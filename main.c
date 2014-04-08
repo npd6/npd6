@@ -230,6 +230,9 @@ void dispatcher(void)
 			msglen = get_rx(interfaces[fdIdx/2].icmpSock, msgdata);
 			flog(LOG_DEBUG2, "For ICMP6 socket, get_rx() gave msg with len = %d", msglen);
 			// We do nothing at all with the received data!
+			// Or maybe we do.... Ref. bug/NFR 60: process them
+			// and yank out the RAs for logging.
+			processICMP(fdIdx, msgdata, msglen);
 			continue;
 		    }
                 }

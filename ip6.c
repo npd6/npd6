@@ -306,6 +306,37 @@ void processNS( int ifIndex,
 
 
 /*****************************************************************************
+ * processICMP
+ *  Takes a received ICMP message and handles it. At first, we don't
+ * do too much. Based upon NFR 60 we are going to look out for RAs, 
+ * extract useful data and log it.
+ * 
+ * Later on we may go further with that information...
+ *
+ * Inputs:
+ *  char *msg
+ *      The received ICMP6.
+ *  int len
+ *      The length of the received data
+ *      *** This has already been sanity checked back in the callers ***
+ *
+ * Outputs:
+ *  As per above, likely just a log/debug for now.
+ *
+ * Return:
+ *      void
+ *
+ */
+void processICMP( int ifIndex,
+                unsigned char *msg,
+                unsigned int len)
+{
+    
+}
+
+
+
+/*****************************************************************************
  * addr6match
  *      Compare two binary ipv6 addresses and see if they match
  *      in the first N bits.

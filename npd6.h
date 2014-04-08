@@ -156,6 +156,7 @@ int     init_sockets(void);
 
 // ip6.c
 void    processNS(int, unsigned char *, unsigned int);
+void	processICMP(int, unsigned char *, unsigned int);
 int     addr6match( struct in6_addr *, struct in6_addr *, int);
 
 
