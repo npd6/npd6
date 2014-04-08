@@ -71,12 +71,12 @@ int open_packet_socket(int ifIndex)
 
     // Bind the socket to the interface we're interested in
     memset(&lladdr, 0, sizeof(lladdr));
-    lladdr.sll_family = AF_PACKET;
+    lladdr.sll_family = PF_PACKET;
     lladdr.sll_protocol = htons(ETH_P_IPV6);
     lladdr.sll_ifindex = ifIndex;
     lladdr.sll_hatype = 0;
     lladdr.sll_pkttype = 0;
-    lladdr.sll_halen = 0;
+    lladdr.sll_halen = ETH_ALEN;
     err=bind(sock, (struct sockaddr *)&lladdr, sizeof(lladdr));
     if (err < 0)
     {
@@ -141,7 +141,7 @@ int open_icmpv6_socket(void)
  *      Called from the dispatcher to pull in the received packet.
  *
  * Inputs:
- *  sockpkt is where the data is waiting.
+ *  socket is where the data is waiting.
  *      
  * Outputs:
  *  unsigned char *msg
@@ -155,21 +155,18 @@ int open_icmpv6_socket(void)
  * care about them afterwards. Once we've got the raw data and the len
  * we're good.
  */
-int get_rx(int ifIndex, unsigned char *msg) 
+int get_rx(int socket, unsigned char *msg) 
 {
     struct sockaddr_in6 saddr;
     struct msghdr mhdr;
     struct iovec iov;
     int len;
     fd_set rfds;
-    int     sockpkt;
-    
-    sockpkt = interfaces[ifIndex].pktSock;
 
     FD_ZERO( &rfds );
-    FD_SET( sockpkt, &rfds );
+    FD_SET( socket, &rfds );
 
-    if( select( sockpkt+1, &rfds, NULL, NULL, NULL ) < 0 )
+    if( select( socket+1, &rfds, NULL, NULL, NULL ) < 0 )
     {
         if (errno != EINTR)
             flog(LOG_ERR, "select failed with: %s", strerror(errno));
@@ -187,7 +184,7 @@ int get_rx(int ifIndex, unsigned char *msg)
     mhdr.msg_control = NULL;
     mhdr.msg_controllen = 0;
 
-    len = recvmsg(sockpkt, &mhdr, 0);
+    len = recvmsg(socket, &mhdr, 0);
 
     /* Impossible.. But let's not take chances */
     if (len > MAX_MSG_SIZE)

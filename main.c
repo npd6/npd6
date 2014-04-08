@@ -177,40 +177,61 @@ void dispatcher(void)
     int             fdIdx;
     int             consecutivePollErrors = 0;
     
-    fds = (struct pollfd *)calloc( interfaceCount+1, sizeof(struct pollfd) );
+    // Each interface has 2 sockets, so we need to allocate for that + 1
+    fds = (struct pollfd *)calloc( (interfaceCount*2)+1, sizeof(struct pollfd) );
     flog(LOG_DEBUG2, "Dynamically allocated %d bytes to the master FD array", 
             (interfaceCount+1) * sizeof(struct pollfd) );
     
+    // In the fds set, the first N positions are for the v6 sockets, the second N
+    // are for the icmpv6 sockets.
     for(fdIdx=0; fdIdx < interfaceCount; fdIdx++)
     {
+	// Packet socket
         fds[fdIdx].fd = interfaces[fdIdx].pktSock;
-        flog(LOG_DEBUG2, "pktSock value is: %d", fds[fdIdx].fd );
         fds[fdIdx].events = POLLIN;
         fds[fdIdx].revents = 0;
+	
+	// ICMP socket
+	// We only bother with this as we get inbound junk on this socket 
+	fds[fdIdx+interfaceCount].fd = interfaces[fdIdx].icmpSock;
+	fds[fdIdx+interfaceCount].events = POLLIN;
+	fds[fdIdx+interfaceCount].revents = 0;
     }
+    
     // Tail it
-    fds[interfaceCount].fd = -1;
-    fds[interfaceCount].events = 0;
-    fds[interfaceCount].revents = 0;
+    fds[interfaceCount*2].fd = -1;
+    fds[interfaceCount*2].events = 0;
+    fds[interfaceCount*2].revents = 0;
 
     for (;;)
     {
         rc = poll(fds, interfaceCount+1, DISPATCH_TIMEOUT);
-        flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
+        //flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
         
         if (rc > 0)
         {
             // Most likely event is a valid data item received.
-            for (fdIdx=0; fdIdx < interfaceCount; fdIdx++)
+            for (fdIdx=0; fdIdx < (interfaceCount*2); fdIdx++)
             {
                 if (fds[fdIdx].revents & POLLIN)
                 {
-                    consecutivePollErrors = 0;	// reset it
-                    msglen = get_rx(fdIdx, msgdata);
-                    // msglen is checked for sanity already within get_rx()
-                    flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
-                    processNS(fdIdx, msgdata, msglen);
-                    continue;
+		    // Was it a packet socket?
+		    if(fdIdx < interfaceCount) {
+			consecutivePollErrors = 0;	// reset it
+			msglen = get_rx(interfaces[fdIdx].pktSock, msgdata);
+			// msglen is checked for sanity already within get_rx()
+			flog(LOG_DEBUG2, "For packet socket, get_rx() gave msg with len = %d", msglen);
+			processNS(fdIdx, msgdata, msglen);
+			continue;
+		    }
+		    // Or was it an ICMP socket?
+		    if(fdIdx >= interfaceCount) {
+			consecutivePollErrors = 0;	// reset it
+			msglen = get_rx(interfaces[fdIdx/2].icmpSock, msgdata);
+			flog(LOG_DEBUG2, "For ICMP6 socket, get_rx() gave msg with len = %d", msglen);
+			// We do nothing at all with the received data!
+			continue;
+		    }
                 }
                 
                 // If it wasn't a POLLIN, it is likely an significant error
