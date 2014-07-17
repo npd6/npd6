@@ -69,6 +69,10 @@ int main(int argc, char *argv[])
     naRouter = 1;
     maxHops = MAXMAXHOPS;
     
+    // Logging
+    listLog=0;
+    ralog=0;
+    
     /* Interface info */
     interfaceCount = 0;
     
@@ -227,13 +231,18 @@ void dispatcher(void)
                     }
                     // Or was it an ICMP socket?
                     if(fdIdx >= interfaceCount) {
+                        struct in6_addr icmp6Addr;
                         consecutivePollErrors = 0;	// reset it
-                        msglen = get_rx(interfaces[fdIdx/2].icmpSock, msgdata);
-                        flog(LOG_DEBUG2, "For ICMP6 socket, get_rx() gave msg with len = %d", msglen);
+                        msglen = get_rx_icmp6(interfaces[fdIdx/2].icmpSock, msgdata, &icmp6Addr);
+                        flog(LOG_DEBUG2, "For ICMP6 socket, get_rx_icmp6() gave msg with len = %d", msglen);
                         // We do nothing at all with the received data!
                         // Or maybe we do.... Ref. bug/NFR 60: process them
                         // and yank out the RAs for logging.
-                        processICMP(fdIdx, msgdata, msglen);
+                        // Decide what to do based upon config file option ralog
+                        if (ralog) 
+                        {
+                            processICMP(fdIdx, msgdata, msglen, &icmp6Addr);
+                        }
                         continue;
                     }
                 }

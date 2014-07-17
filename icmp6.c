@@ -114,7 +114,7 @@ int open_packet_socket(int ifIndex)
  */
 int open_icmpv6_socket(void)
 {
-    int sock, err;
+    int sock, err, optval = 1;
 
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
     if (sock < 0)
@@ -131,6 +131,17 @@ int open_icmpv6_socket(void)
     }
     flog(LOG_DEBUG2, "setsockopt(IPV6_UNICAST_HOPS = %d) OK", maxHops);
 
+    /* Set packet info return via recvmsg() later */
+    /* Needed to get src addr of received ICMP pkts */
+    err = setsockopt(sock, IPPROTO_IPV6, IPV6_2292PKTINFO, &optval, sizeof(optval));
+    if (err < 0)
+    {
+        flog(LOG_ERR, "setsockopt(IPV6_2292PKTINFO): %s", strerror(errno));
+        return (-1);
+    }
+    flog(LOG_DEBUG2, "setsockopt(IPV6_2292PKTINFO) OK");
+    
+    
     return sock;
 }
 
@@ -202,6 +213,109 @@ int get_rx(int socket, unsigned char *msg)
 
     return len;
 }
+
+
+/*****************************************************************************
+ * get_rx_icmp6
+ *      Called from the dispatcher to pull in the received packet.
+ *
+ * Inputs:
+ *  socket is where the data is waiting.
+ *      
+ * Outputs:
+ *  unsigned char *msg
+ *      The data.
+ *
+ * Return:
+ *      int length of data received, otherwise -1 on error
+ *
+ * NOTES:
+ * There's a lot of temp data structures needed here, but we really don't
+ * care about them afterwards. Once we've got the raw data and the len
+ * we're good.
+ */
+int get_rx_icmp6(int socket, unsigned char *msg, struct in6_addr *addr6) 
+{
+    struct sockaddr_in6 saddr;
+    struct msghdr mhdr;
+    struct iovec iov[2];
+    int len;
+    fd_set rfds;
+    
+    /* For ancillary data */
+    u_char cbuf[2048];
+    struct cmsghdr *cm;
+    struct in6_pktinfo *thispkt6;
+    char    addr_str[INET6_ADDRSTRLEN];
+
+    FD_ZERO( &rfds );
+    FD_SET( socket, &rfds );
+
+    if( select( socket+1, &rfds, NULL, NULL, NULL ) < 0 )
+    {
+        if (errno != EINTR)
+            flog(LOG_ERR, "select failed with: %s", strerror(errno));
+        return -1;
+    }
+
+    iov[0].iov_len = MAX_MSG_SIZE;
+    iov[0].iov_base = (caddr_t) msg;
+
+    memset(&mhdr, 0, sizeof(mhdr));
+    mhdr.msg_name = &saddr;
+    mhdr.msg_namelen = sizeof(saddr);
+    mhdr.msg_iov = iov;
+    mhdr.msg_iovlen = 1;
+    mhdr.msg_control = (caddr_t)cbuf;
+    mhdr.msg_controllen = sizeof(cbuf);
+   
+    len = recvmsg(socket, &mhdr, 0);
+    
+    /* Src addr  - copy it for caller*/
+    memcpy(addr6, &(saddr.sin6_addr), sizeof(struct in6_addr));
+    print_addr(&(saddr.sin6_addr), addr_str);
+    flog( LOG_DEBUG2, "RA received src address: %s", addr_str);
+    
+    /* Walk the chain of cmsg blocks (although unlikely to be more than 1) */
+    for (cm = CMSG_FIRSTHDR(&mhdr); cm != NULL; cm = CMSG_NXTHDR(&mhdr, cm))
+    {
+        if (cm->cmsg_level == IPPROTO_IPV6 &&
+            cm->cmsg_type  == IPV6_2292PKTINFO &&
+            cm->cmsg_len   == CMSG_LEN(sizeof(struct in6_pktinfo)))
+        {
+            flog(LOG_DEBUG2, "Ancillary data contains in6_pktinfo.");
+            thispkt6 = (struct in6_pktinfo *)CMSG_DATA(cm);
+            // Dst addr
+            char addr_str[INET6_ADDRSTRLEN];
+            print_addr(&(thispkt6->ipi6_addr), addr_str);
+            flog( LOG_DEBUG2, "RA received dst address: %s", addr_str);
+        }
+        else
+        {
+            flog(LOG_DEBUG2, "Ancillary data was unrecognised.");
+        }
+    }
+
+    /* Impossible.. But let's not take chances */
+    if (len > MAX_MSG_SIZE)
+    {
+        flog(LOG_ERR, "Read more data from socket than we can handle. Ignoring it.");
+        return -1;
+    }
+    
+    if (len < 0)
+    {
+        if (errno != EINTR)
+            flog(LOG_ERR, "recvmsg failed with: %s", strerror(errno));
+        return -1;
+    }
+
+    return len;
+}
+
+
+
+
 
 
 

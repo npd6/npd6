@@ -329,22 +329,23 @@ void processNS( int ifIndex,
  */
 void processICMP( int ifIndex,
                   unsigned char *msg,
-                  unsigned int len)
+                  unsigned int len,
+                  struct in6_addr *addr6)
 {
     // Offsets into the received packet
     struct icmp6_hdr            *icmph = 
     (struct icmp6_hdr *)(msg);
     struct nd_router_advert     *ra = 
     (struct nd_router_advert *)(msg + sizeof(struct icmp6_hdr));
-    //struct icmp6_hdr            rah = 
-    //    (ra->nd_ra_hdr);
+
     uint32_t reachableT = ra->nd_ra_reachable;
-    uint32_t retransmitT = ra->nd_ra_retransmit;
-    
+    uint32_t retransmitT = ra->nd_ra_retransmit;  
     int curHopLimit = ra->nd_ra_curhoplimit;
     int rtrLifetime = ra->nd_ra_router_lifetime;
     
     int counter = 0;
+    char addr6_str[INET6_ADDRSTRLEN];
+    
     // May not exist - will check
     struct nd_opt_hdr *optHdr = 
     (struct nd_opt_hdr *)(msg + sizeof(struct nd_router_advert));
@@ -352,9 +353,11 @@ void processICMP( int ifIndex,
     flog(LOG_DEBUG, "Check for RA in received ICMP6.");
     
     if ( icmph->icmp6_type == ND_ROUTER_ADVERT )
-    {
-        flog(LOG_DEBUG2, "Reachable timer = %d, retransmit timer = %d", reachableT, retransmitT);
-        flog(LOG_DEBUG2, "Cur Hop Limit = %d, Router Lifetime = %d", curHopLimit, rtrLifetime);
+    {            
+        print_addr(addr6, addr6_str);
+        flog(LOG_INFO, "RA received from address: %s", addr6_str);
+        flog(LOG_DEBUG, "Reachable timer = %ld, retransmit timer = %ld", ntohl(reachableT), ntohl(retransmitT));
+        flog(LOG_DEBUG, "Cur Hop Limit = %d, Router Lifetime = %d", curHopLimit, rtrLifetime);
         
         counter = sizeof(struct nd_router_advert);
         while (counter < len)
@@ -385,7 +388,7 @@ void processICMP( int ifIndex,
                     break;
                     
                 case ND_OPT_PREFIX_INFORMATION:
-                    flog(LOG_DEBUG, "RA-opt received: Prefix Info");
+                    flog(LOG_INFO, "RA-opt received: Prefix Info");
                     prefixInfo =            (struct nd_opt_prefix_info *)optHdr;
                     prefixLen =             prefixInfo->nd_opt_pi_prefix_len;
                     prefixValidTime =       prefixInfo->nd_opt_pi_valid_time;
@@ -393,10 +396,10 @@ void processICMP( int ifIndex,
                     prefixPrefix =          prefixInfo->nd_opt_pi_prefix;
                     
                     print_addr(&prefixPrefix, prefixPrefix_str);
-                    flog(LOG_DEBUG, "Received prefix is: %s", prefixPrefix_str);
-                    flog(LOG_DEBUG, "Prefix length: %d", prefixLen);
-                    flog(LOG_DEBUG, "Valid time: %d", prefixValidTime);
-                    flog(LOG_DEBUG, "Preferred time: %d", prefixPreferredTime);
+                    flog(LOG_INFO, "Received prefix is: %s", prefixPrefix_str);
+                    flog(LOG_INFO, "Prefix length: %d", prefixLen);
+                    flog(LOG_INFO, "Valid time: %ld", ntohl(prefixValidTime));
+                    flog(LOG_INFO, "Preferred time: %ld", ntohl(prefixPreferredTime));
                     break;
                     
                 case ND_OPT_REDIRECTED_HEADER:
