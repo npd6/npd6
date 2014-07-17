@@ -27,14 +27,14 @@
 
 char usage_str[] =
 {
-"\n"
-"  -c, --config=PATH      Sets the config file.  Default is /etc/npd6.conf.\n"
-"  -d, --debug            Sets the normal debug level.\n"
-"  -D, --debug2           Sets full debug level. (Lots!)\n"
-"  -f, --foreground       Run in foreground, otherwise daemonize.\n"
-"  -h, --help             Show this help screen.\n"
-"  -l  --logfile=PATH     Sets the log file, else default to syslog. If \"-l -\" then stdout/stderr used.\n"
-"  -v, --version          Print the version and quit.\n"
+    "\n"
+    "  -c, --config=PATH      Sets the config file.  Default is /etc/npd6.conf.\n"
+    "  -d, --debug            Sets the normal debug level.\n"
+    "  -D, --debug2           Sets full debug level. (Lots!)\n"
+    "  -f, --foreground       Run in foreground, otherwise daemonize.\n"
+    "  -h, --help             Show this help screen.\n"
+    "  -l  --logfile=PATH     Sets the log file, else default to syslog. If \"-l -\" then stdout/stderr used.\n"
+    "  -v, --version          Print the version and quit.\n"
 };
 
 struct option prog_opt[] =
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 {
     char logfile[FILENAME_MAX] = "";
     int c, err, loop;
-
+    
     // Default some globals
     strncpy(configfile, NPD6_CONF, FILENAME_MAX);
     daemonize=1;
@@ -69,42 +69,46 @@ int main(int argc, char *argv[])
     naRouter = 1;
     maxHops = MAXMAXHOPS;
     
+    // Logging
+    listLog=0;
+    ralog=0;
+    
     /* Interface info */
     interfaceCount = 0;
-
+    
     /* Parse the args */
     while ((c = getopt_long(argc, argv, OPTIONS_STR, prog_opt, NULL)) > 0)
     {
         if (c==-1)
             break;
-
+        
         switch (c) {
-        case 'c':
-            strcpy(configfile, optarg);
-            break;
-        case 'l':
-            strcpy(logfile, optarg);
-            break;
-        case 'd':
-            debug=1;
-            break;
-        case 'D':
-            debug=2;
-            break;
-        case 'f':
-            daemonize=0;
-            break;
-        case 'v':
-            showVersion();
-            return 0;
-            break;
-        case 'h':
-            showUsage();
-            return 0;
-            break;
+            case 'c':
+                strcpy(configfile, optarg);
+                break;
+            case 'l':
+                strcpy(logfile, optarg);
+                break;
+            case 'd':
+                debug=1;
+                break;
+            case 'D':
+                debug=2;
+                break;
+            case 'f':
+                daemonize=0;
+                break;
+            case 'v':
+                showVersion();
+                return 0;
+                break;
+            case 'h':
+                showUsage();
+                return 0;
+                break;
         }
     }
-
+    
     /* Sort out where to log */
     if ( strlen(logfile) )
     {
@@ -117,7 +121,7 @@ int main(int argc, char *argv[])
     {
         logging = USE_SYSLOG;
     }
-
+    
     /* Open the log and config*/
     if ( (logging == USE_FILE) && (openLog(logfile) < 0)  )
     {
@@ -125,7 +129,7 @@ int main(int argc, char *argv[])
         exit (1);
     }
     flog(LOG_INFO, "*********************** npd6 *****************************");
-
+    
     if ( readConfig(configfile) )
     {
         flog(LOG_ERR, "Error in config file: %s", configfile);
@@ -137,13 +141,13 @@ int main(int argc, char *argv[])
         flog(LOG_ERR, "init_sockets: failed to initialise %d sockets.", err);
         exit(1);
     }
-
+    
     /* Set allmulti on the interfaces */
     for (loop=0; loop<interfaceCount; loop++)
     {
         interfaces[loop].multiStatus = if_allmulti(interfaces[loop].nameStr, TRUE);
     }
-
+    
     /* Seems like about the right time to daemonize (or not) */
     if (daemonize)
     {
@@ -153,17 +157,17 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-
+    
     /* Set up signal handlers */
     signal(SIGUSR1, usersignal);
     signal(SIGUSR2, usersignal);
     signal(SIGHUP, usersignal);
     signal(SIGINT, usersignal);
     signal(SIGTERM, usersignal);    // Typically used by init.d scripts
-
+    
     /* And off we go... */
     dispatcher();
-
+    
     flog(LOG_ERR, "Fell back out of dispatcher... This is impossible.");
     return 0;
 }
@@ -177,40 +181,71 @@ void dispatcher(void)
     int             fdIdx;
     int             consecutivePollErrors = 0;
     
-    fds = (struct pollfd *)calloc( interfaceCount+1, sizeof(struct pollfd) );
+    // Each interface has 2 sockets, so we need to allocate for that + 1
+    fds = (struct pollfd *)calloc( (interfaceCount*2)+1, sizeof(struct pollfd) );
     flog(LOG_DEBUG2, "Dynamically allocated %d bytes to the master FD array", 
-            (interfaceCount+1) * sizeof(struct pollfd) );
+         (interfaceCount+1) * sizeof(struct pollfd) );
     
+    // In the fds set, the first N positions are for the v6 sockets, the second N
+    // are for the icmpv6 sockets.
     for(fdIdx=0; fdIdx < interfaceCount; fdIdx++)
     {
+        // Packet socket
         fds[fdIdx].fd = interfaces[fdIdx].pktSock;
         flog(LOG_DEBUG2, "pktSock value is: %d", fds[fdIdx].fd );
         fds[fdIdx].events = POLLIN;
         fds[fdIdx].revents = 0;
+        
+        // ICMP socket
+        // We only bother with this as we get inbound junk on this socket 
+        // (including RAs which we might actually care about now cf. bug 60)
+        fds[fdIdx+interfaceCount].fd = interfaces[fdIdx].icmpSock;
+        fds[fdIdx+interfaceCount].events = POLLIN;
+        fds[fdIdx+interfaceCount].revents = 0;
     }
+    
     // Tail it
-    fds[interfaceCount].fd = -1;
-    fds[interfaceCount].events = 0;
-    fds[interfaceCount].revents = 0;
-
+    fds[interfaceCount*2].fd = -1;
+    fds[interfaceCount*2].events = 0;
+    fds[interfaceCount*2].revents = 0;
+    
     for (;;)
     {
         rc = poll(fds, interfaceCount+1, DISPATCH_TIMEOUT);
-        flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
+        //flog(LOG_DEBUG2, "Came off poll with rc = %d", rc);
         
         if (rc > 0)
         {
             // Most likely event is a valid data item received.
-            for (fdIdx=0; fdIdx < interfaceCount; fdIdx++)
+            for (fdIdx=0; fdIdx < (interfaceCount*2); fdIdx++)
             {
                 if (fds[fdIdx].revents & POLLIN)
                 {
-                    consecutivePollErrors = 0;	// reset it
-                    msglen = get_rx(fdIdx, msgdata);
-                    // msglen is checked for sanity already within get_rx()
-                    flog(LOG_DEBUG2, "get_rx() gave msg with len = %d", msglen);
-                    processNS(fdIdx, msgdata, msglen);
-                    continue;
+                    // Was it a packet socket?
+                    if(fdIdx < interfaceCount) {
+                        consecutivePollErrors = 0;	// reset it
+                        msglen = get_rx(interfaces[fdIdx].pktSock, msgdata);
+                        // msglen is checked for sanity already within get_rx()
+                        flog(LOG_DEBUG2, "For packet socket, get_rx() gave msg with len = %d", msglen);
+                        processNS(fdIdx, msgdata, msglen);
+                        continue;
+                    }
+                    // Or was it an ICMP socket?
+                    if(fdIdx >= interfaceCount) {
+                        struct in6_addr icmp6Addr;
+                        consecutivePollErrors = 0;	// reset it
+                        msglen = get_rx_icmp6(interfaces[fdIdx/2].icmpSock, msgdata, &icmp6Addr);
+                        flog(LOG_DEBUG2, "For ICMP6 socket, get_rx_icmp6() gave msg with len = %d", msglen);
+                        // We do nothing at all with the received data!
+                        // Or maybe we do.... Ref. bug/NFR 60: process them
+                        // and yank out the RAs for logging.
+                        // Decide what to do based upon config file option ralog
+                        if (ralog) 
+                        {
+                            processICMP(fdIdx, msgdata, msglen, &icmp6Addr);
+                        }
+                        continue;
+                    }
                 }
                 
                 // If it wasn't a POLLIN, it is likely an significant error
@@ -230,20 +265,20 @@ void dispatcher(void)
                     fds[fdIdx].fd = interfaces[fdIdx].pktSock;
                     fds[fdIdx].events = POLLIN;
                     fds[fdIdx].revents = 0;
-
+                    
                     // Have we had more consecutive errors than the threshold value?
                     consecutivePollErrors++;
                     if ((pollErrorLimit > 0) && (consecutivePollErrors >= pollErrorLimit) )
                     {
                         flog(LOG_ERR, "dispatcher(): %d consecutive major poll errors. Terminating.",
-                            consecutivePollErrors);
+                             consecutivePollErrors);
                         dropdead();
                     }
-
+                    
                     continue;
                 }
             }
-        continue;
+            continue;
         }
         else if ( rc == 0 )
         {

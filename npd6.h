@@ -113,6 +113,9 @@ int             listType;
 #define         WHITELIST   2
 int             listLog;            // From config file NPD6LISTLOG
 
+// Logging - various
+int             ralog;              // From config file NPD6RALOG
+
 // Error handling
 int		        pollErrorLimit;     // From config file
 
@@ -151,11 +154,13 @@ void    storeListEntry(struct in6_addr *);
 int     open_packet_socket(int);
 int     open_icmpv6_socket(void);
 int     get_rx(int, unsigned char *);
+int     get_rx_icmp6(int, unsigned char *, struct in6_addr *);
 int     if_allmulti(char *, unsigned int);
 int     init_sockets(void);
 
 // ip6.c
 void    processNS(int, unsigned char *, unsigned int);
+void	processICMP(int, unsigned char *, unsigned int, struct in6_addr *);
 int     addr6match( struct in6_addr *, struct in6_addr *, int);
 
 

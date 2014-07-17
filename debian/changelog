@@ -1,3 +1,21 @@
+npd6 (1.1.0) trusty; urgency=medium
+
+  * Consolidation into 1.1.0
+
+ -- Sean Groarke <sgroarke@gmail.com>  Wed, 16 Jul 2014 16:13:30 +0200
+
+npd6 (1.0.1) trusty; urgency=medium
+
+  * Fix for bug 60
+
+ -- Sean Groarke <sgroarke@gmail.com>  Wed, 16 Jul 2014 16:12:30 +0200
+
+npd6 (1.0.1) quantal; urgency=low
+
+  * Massage into Launchpad-suitable form
+
+ -- Sean Groarke <sgroarke@gmail.com>  Fri, 04 Jan 2013 15:47:20 +0100
+
 npd6 (1.0.0) quantal; urgency=low
 
   * Merge DEV to TRUNK - Lots of changes and fixes.

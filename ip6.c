@@ -60,21 +60,21 @@ void processNS( int ifIndex,
     char                        prefixaddr_str[INET6_ADDRSTRLEN];
     char                        srcaddr_str[INET6_ADDRSTRLEN];
     char                        dstaddr_str[INET6_ADDRSTRLEN];
-
+    
     // Offsets into the received packet
     struct ip6_hdr              *ip6h =
-        (struct ip6_hdr *)(msg + ETH_HLEN);
+    (struct ip6_hdr *)(msg + ETH_HLEN);
     struct icmp6_hdr            *icmph =
-        (struct icmp6_hdr *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
+    (struct icmp6_hdr *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
     struct nd_neighbor_solicit  *ns =
-        (struct nd_neighbor_solicit *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
-
+    (struct nd_neighbor_solicit *)(msg + ETH_HLEN + sizeof( struct ip6_hdr));
+    
     // For the interfaceIdx
     struct  in6_addr            prefixaddr = interfaces[ifIndex].prefix;
     int                         prefixaddrlen = interfaces[ifIndex].prefixLen;
     unsigned char               *linkAddr = interfaces[ifIndex].linkAddr;
     int                         interfaceIdx = interfaces[ifIndex].index;
-        
+    
     // Extracted from the received packet
     struct in6_addr             *srcaddr;
     struct in6_addr             *dstaddr;
@@ -96,7 +96,7 @@ void processNS( int ifIndex,
     struct nd_opt_hdr           *opthdr;
     void                        *optdata;
     
-
+    
     // Validate ICMP packet type, to ensure filter was correct
     // In theory not required, as the filter CAN'T be wrong...!
     if ( icmph->icmp6_type == ND_NEIGHBOR_SOLICIT )
@@ -117,14 +117,14 @@ void processNS( int ifIndex,
         flog(LOG_ERR, "Received impossible packet... filter failed. Oooops.");
         return;
     }
-
+    
     // Bug 27 - Handle DAD NS as per RFC4862, 5.4.3
     if ( IN6_IS_ADDR_UNSPECIFIED(srcaddr) )
     { 
         flog(LOG_DEBUG, "Unspecified src addr - DAD activity. Ignoring NS.");
         return;
     }
-        
+    
     // Based upon the dstaddr, record if this was a unicast or multicast NS.
     // If unicast, we'll use that later when we decide whether to add the
     // target link-layer option to any outgoing NA.
@@ -139,7 +139,7 @@ void processNS( int ifIndex,
         flog(LOG_DEBUG2, "Unicast NS");
         multicastNS=0;
     }
-
+    
     // Within the NS, who are they looking for?
     targetaddr = (struct in6_addr *)&(ns->nd_ns_target);
     if (debug || listLog)
@@ -149,7 +149,7 @@ void processNS( int ifIndex,
         flog(LOG_DEBUG, "NS target addr: %s", targetaddr_str);
         flog(LOG_DEBUG, "Local prefix: %s", prefixaddr_str);
     }
-
+    
     // If tgt-addr == dst-addr then ignore this, as the automatic mechanisms
     // will reply themselves - we don't need to.
     if ( nsIgnoreLocal && IN6_ARE_ADDR_EQUAL(targetaddr, dstaddr) )
@@ -157,13 +157,13 @@ void processNS( int ifIndex,
         flog(LOG_DEBUG, "tgt==dst - Ignore.");
         return;
     }
-
+    
     // Check for black or white listing compliance
     switch (listType) {
         case NOLIST:
             flog(LOG_DEBUG2, "Neither white nor black listing in operation.");
             break;
-
+            
         case BLACKLIST:
             // See if the address matches an expression
             if((compareExpression(targetaddr) == 1))
@@ -178,15 +178,15 @@ void processNS( int ifIndex,
                 return; //Abandon
             }
             break;
-
+            
         case WHITELIST:
             // See if the address matches an expression
             if((compareExpression(targetaddr) == 1))
             {
                 flog(LISTLOGGING, "NS for whitelisted EXPR: %s", targetaddr_str);
-              	break;	// Don't check further - we got a hit.
+                break;	// Don't check further - we got a hit.
             }
-
+            
             // If active and tgt is NOT in the list (and didn't match an expr above), bail.
             if ( tfind( (void *)targetaddr, &lRoot, tCompare) )
             {
@@ -202,7 +202,7 @@ void processNS( int ifIndex,
             }
             break;
     }
-
+    
     // Does it match our configured prefix that we're interested in?
     if (! addr6match( targetaddr, &prefixaddr, prefixaddrlen) )
     {
@@ -212,7 +212,7 @@ void processNS( int ifIndex,
     else
     {
         flog(LOG_DEBUG, "Target:prefix - Build NA response.");
-
+        
         // If configured, log target to list
         if (collectTargets)
         {
@@ -227,7 +227,7 @@ void processNS( int ifIndex,
         
         // Set the destination of the NA
         memcpy(&sockaddr.sin6_addr, srcaddr, sizeof(struct in6_addr));
-
+        
         // Set up the NA itself
         memset( nabuff, 0, sizeof(nabuff) );
         nad = (struct nd_neighbor_advert *)nabuff;
@@ -242,9 +242,9 @@ void processNS( int ifIndex,
         {
             nad->nd_na_flags_reserved |= ND_NA_FLAG_SOLICITED;
         }
-            
+        
         memcpy(&(nad->nd_na_target), targetaddr, sizeof(struct in6_addr) );
-
+        
         if (multicastNS || naLinkOptFlag)
         {
             // If the NS that came in was to a multicast address
@@ -257,7 +257,7 @@ void processNS( int ifIndex,
             opthdr->nd_opt_len = 1; // Units of 8-octets
             optdata = (unsigned char *) (opthdr + 1);
             memcpy( optdata, linkAddr, 6);
-
+            
             // Build the io vector
             iovlen = sizeof(struct nd_neighbor_advert) + sizeof(struct nd_opt_hdr) + ETH_ALEN;
             iov.iov_len = iovlen;
@@ -277,9 +277,9 @@ void processNS( int ifIndex,
         cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo) );
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type = IPV6_PKTINFO;
-
+        
         pkt_info = (struct in6_pktinfo *)CMSG_DATA(cmsg);
-
+        
         // Set src (sending) addr and outgoing i/f for the datagram            
         memcpy(&pkt_info->ipi6_addr, &srcLinkAddr, sizeof(struct in6_addr) );
         pkt_info->ipi6_ifindex = interfaceIdx;        
@@ -292,9 +292,9 @@ void processNS( int ifIndex,
         mhdr.msg_iovlen = 1;
         mhdr.msg_control = (void *) cmsg;
         mhdr.msg_controllen = sizeof(chdr);
-
+        
         flog(LOG_DEBUG2, "Outbound message built");
-
+        
         err = sendmsg( interfaces[ifIndex].icmpSock, &mhdr, 0);
         if (err < 0)
             flog(LOG_ERR, "sendmsg returned with error %d = %s", errno, strerror(errno));
@@ -303,6 +303,150 @@ void processNS( int ifIndex,
         
     }
 }
+
+
+/*****************************************************************************
+ * processICMP
+ * Takes a received ICMP message and handles it. At first, we don't
+ * do too much. Based upon NFR 60 we are going to look out for RAs, 
+ * extract useful data and log it.
+ * 
+ * Later on we may go further with that information...
+ *
+ * Inputs:
+ *  char *msg
+ *      The received ICMP6.
+ *  int len
+ *      The length of the received data
+ *      *** This has already been sanity checked back in the callers ***
+ *
+ * Outputs:
+ *  As per above, likely just a log/debug for now.
+ *
+ * Return:
+ *      void
+ *
+ */
+void processICMP( int ifIndex,
+                  unsigned char *msg,
+                  unsigned int len,
+                  struct in6_addr *addr6)
+{
+    // Offsets into the received packet
+    struct icmp6_hdr            *icmph = 
+    (struct icmp6_hdr *)(msg);
+    struct nd_router_advert     *ra = 
+    (struct nd_router_advert *)(msg + sizeof(struct icmp6_hdr));
+
+    uint32_t reachableT = ra->nd_ra_reachable;
+    uint32_t retransmitT = ra->nd_ra_retransmit;  
+    int curHopLimit = ra->nd_ra_curhoplimit;
+    int rtrLifetime = ra->nd_ra_router_lifetime;
+    
+    int counter = 0;
+    char addr6_str[INET6_ADDRSTRLEN];
+    
+    // May not exist - will check
+    struct nd_opt_hdr *optHdr = 
+    (struct nd_opt_hdr *)(msg + sizeof(struct nd_router_advert));
+    
+    flog(LOG_DEBUG, "Check for RA in received ICMP6.");
+    
+    if ( icmph->icmp6_type == ND_ROUTER_ADVERT )
+    {            
+        print_addr(addr6, addr6_str);
+        flog(LOG_INFO, "RA received from address: %s", addr6_str);
+        flog(LOG_DEBUG, "Reachable timer = %ld, retransmit timer = %ld", ntohl(reachableT), ntohl(retransmitT));
+        flog(LOG_DEBUG, "Cur Hop Limit = %d, Router Lifetime = %d", curHopLimit, rtrLifetime);
+        
+        counter = sizeof(struct nd_router_advert);
+        while (counter < len)
+        {
+            uint8_t     optionLen; /* n.b. Octets */
+            uint8_t     prefixLen;
+            uint32_t    prefixValidTime, prefixPreferredTime;
+            struct      in6_addr prefixPrefix;
+            char        prefixPrefix_str[INET6_ADDRSTRLEN];
+            struct      nd_opt_prefix_info   *prefixInfo;
+            unsigned char        *linkAddr;
+            int         watchDog=0;
+            
+            // So offset optHdr is now valid and points to 1 or more options
+            switch(optHdr->nd_opt_type) {
+                case ND_OPT_SOURCE_LINKADDR:
+                    flog(LOG_DEBUG, "RA-opt received: Source Link Address");
+                    linkAddr = ((unsigned char *)(optHdr) + 2);                  
+                    flog(LOG_DEBUG, "Link address: %02x:%02x:%02x:%02x:%02x:%02x",
+                         linkAddr[0], linkAddr[1], linkAddr[2], linkAddr[3], linkAddr[4], linkAddr[5]);
+                    break;
+                    
+                case ND_OPT_TARGET_LINKADDR:
+                    flog(LOG_DEBUG, "RA-opt received: Target Link Address");
+                    linkAddr = ((unsigned char *)(optHdr) + 2);                  
+                    flog(LOG_DEBUG, "Link address: %02x:%02x:%02x:%02x:%02x:%02x",
+                         linkAddr[0], linkAddr[1], linkAddr[2], linkAddr[3], linkAddr[4], linkAddr[5]);    
+                    break;
+                    
+                case ND_OPT_PREFIX_INFORMATION:
+                    flog(LOG_INFO, "RA-opt received: Prefix Info");
+                    prefixInfo =            (struct nd_opt_prefix_info *)optHdr;
+                    prefixLen =             prefixInfo->nd_opt_pi_prefix_len;
+                    prefixValidTime =       prefixInfo->nd_opt_pi_valid_time;
+                    prefixPreferredTime =   prefixInfo->nd_opt_pi_preferred_time;
+                    prefixPrefix =          prefixInfo->nd_opt_pi_prefix;
+                    
+                    print_addr(&prefixPrefix, prefixPrefix_str);
+                    flog(LOG_INFO, "Received prefix is: %s", prefixPrefix_str);
+                    flog(LOG_INFO, "Prefix length: %d", prefixLen);
+                    flog(LOG_INFO, "Valid time: %ld", ntohl(prefixValidTime));
+                    flog(LOG_INFO, "Preferred time: %ld", ntohl(prefixPreferredTime));
+                    break;
+                    
+                case ND_OPT_REDIRECTED_HEADER:
+                    flog(LOG_DEBUG, "RA-opt received: Redirected Header");
+                    break;
+                    
+                case ND_OPT_MTU:
+                    flog(LOG_DEBUG, "RA-opt received: MTU");
+                    break;
+                    
+                case ND_OPT_RTR_ADV_INTERVAL:
+                    flog(LOG_DEBUG, "RA-opt received: RA Interval");
+                    break;
+                    
+                case ND_OPT_HOME_AGENT_INFO:
+                    flog(LOG_DEBUG, "RA-opt received: Home Agent Info");
+                    break; 
+                    
+                default:
+                    // *** Important default ***
+                    // Got an option that we cannot recognise - log and skip it
+                    flog(LOG_ERR, "Had option type = %d  - do not recognise.", optHdr->nd_opt_type);                                  
+            }
+            
+            // Sanity check to catch runaway situation with corrupt packet (malicious or otherwise!)
+            watchDog++;
+            if(watchDog > 20) // 20 seems enough to say STOP!
+            {
+                flog(LOG_ERR, "Tripped watchdog in ICMP option decoding... Something very odd...");
+                return;
+            }
+            
+            // Increment to (possible) next opt
+            optionLen = (optHdr->nd_opt_len) * 8;
+            counter += optionLen;
+            // 32/64-bit agnostic
+            optHdr = (struct nd_opt_hdr *) ((char *)optHdr + optionLen);
+        }    
+    }
+    else
+    {
+        flog(LOG_ERR, "Received ICMP6 - did not recognise it.");
+        flog(LOG_ERR, "Type was %d", icmph->icmp6_type);
+        return;
+    }
+}
+
 
 
 /*****************************************************************************
@@ -371,9 +515,9 @@ int addr6match( struct in6_addr *a1, struct in6_addr *a2, int bits)
             }
         }
     }
-
+    
     flog(LOG_DEBUG2, "Target and prefix matched up to bit position %d", bits);
-
+    
     return 1;
 }
 
