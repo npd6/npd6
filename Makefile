@@ -34,7 +34,7 @@ INSTALL_PREFIX=/usr
 MAN_PREFIX=/usr/share/man
 DEBIAN=debian/
 TARGZ=npd6-$(VERSION)
-DEV:= -D'BUILDREV="$(VERSION).$(shell svnversion -n .)"'
+DEV:= -D'BUILDREV="$(VERSION).$(shell git describe --always )"'
 
 all: $(SOURCES) $(EXECUTABLE)
 
