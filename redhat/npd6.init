@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# npd6	IPv6 Neighbor Proxy
+#
+# chkconfig: 345 70 30
+# description: A Linux daemon to provide a proxy service for IPv6 Neighbor Solcitations received by a gateway routing device.
+# processname: npd6
+# config: /etc/sysconfig/npd6
+
+PATH=/usr/bin:/sbin:/bin:/usr/sbin
+export PATH
+
+[ -f /etc/sysconfig/npd6 ] && . /etc/sysconfig/npd6
+lockfile=${LOCKFILE-/var/lock/subsys/npd6}
+pidfile=${PIDFILE-/var/run/npd6.pid}
+npd6=${NPD6-/usr/local/bin/npd6}
+RETVAL=0
+
+# Source function library.
+. /etc/init.d/functions
+
+start() {
+	echo -n $"Starting npd6: "
+	if [ -f $lockfile ]; then
+		echo "npd6 seems to be running already or lockfile exists"
+		exit 1
+	fi
+	daemon $npd6
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && touch ${lockfile}
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping npd6: "
+	killproc $npd6 -QUIT
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f ${lockfile} ${pidfile}
+}
+
+restart() {
+	stop
+	start
+}
+
+rh_status() {
+	status $npd6
+	RETVAL=$?
+	return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    restart)
+        restart
+    ;;
+    status)
+        rh_status
+    ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        exit 1
+esac
+
+exit $RETVAL
