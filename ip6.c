@@ -25,7 +25,7 @@
 #include "includes.h"
 #include "npd6.h"
 
-#include "expintf.h"
+#include "exparse/expintf.h"
 
 /*****************************************************************************
  * processNS
@@ -311,8 +311,10 @@ void processNS( int ifIndex,
  * do too much. Based upon NFR 60 we are going to look out for RAs, 
  * extract useful data and log it.
  * 
- * Later on we may go further with that information...
- *
+ * Note that fall-through, that we do not recognise the ICMP code, is notg an error at all.
+ * Merely indicates it's not ICMP6 of interest to us, so we let it pass through the normal
+ * stack. Could be e.g. PING6 etc.
+ * 
  * Inputs:
  *  char *msg
  *      The received ICMP6.
@@ -441,8 +443,9 @@ void processICMP( int ifIndex,
     }
     else
     {
-        flog(LOG_ERR, "Received ICMP6 - did not recognise it.");
-        flog(LOG_ERR, "Type was %d", icmph->icmp6_type);
+        // It's not ICMP6 we care about, so let it go on its way
+        flog(LOG_DEBUG, "Received ICMP6 - did not recognise and/or care about it.");
+        flog(LOG_DEBUG, "Type was %d", icmph->icmp6_type);
         return;
     }
 }

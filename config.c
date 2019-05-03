@@ -26,7 +26,7 @@
 #include "npd6.h"
 #include "npd6config.h"
 
-#include "expintf.h"
+#include "exparse/expintf.h"
 
 //*******************************************************
 // Take supplied filename and open it, then parse the contents.
