@@ -65,16 +65,16 @@
 //*****************************************************************************
 // Globals
 //
-char            *pname;
-char            *paramName;
-int             sockpkt;
-int             debug;
-int             daemonize;
-FILE            *logFileFD;
-int             logging;
-char            configfile[FILENAME_MAX];
-FILE            *configFileFD;
-int             initialIFFlags;
+extern char            *pname;
+extern char            *paramName;
+extern int             sockpkt;
+extern int             debug;
+extern int             daemonize;
+extern FILE            *logFileFD;
+extern int             logging;
+extern char            configfile[FILENAME_MAX];
+extern FILE            *configFileFD;
+extern int             initialIFFlags;
 
 // Record of interfaces, prefix, indices, etc.
 struct npd6Interface {
@@ -88,36 +88,36 @@ struct npd6Interface {
     int             pktSock;
     int             icmpSock;
 };
-unsigned int    interfaceCount;         // Total number of interface/prefix combos
+extern unsigned int    interfaceCount;         // Total number of interface/prefix combos
 // We dynaimcally size this at run-time
-struct  npd6Interface *interfaces;
+extern struct  npd6Interface *interfaces;
 
 // Key behaviour
-int             naLinkOptFlag;      // From config file NPD6OPTFLAG
-int             nsIgnoreLocal;      // From config file NPD6LOCALIG
-int             naRouter;           // From config file NPD6ROUTERNA
-int             maxHops;            // From config file NPD6MAXHOPS
-int             collectTargets;     // From config file NPD6TARGETS
+extern int             naLinkOptFlag;      // From config file NPD6OPTFLAG
+extern int             nsIgnoreLocal;      // From config file NPD6LOCALIG
+extern int             naRouter;           // From config file NPD6ROUTERNA
+extern int             maxHops;            // From config file NPD6MAXHOPS
+extern int             collectTargets;     // From config file NPD6TARGETS
 
 // Target tree data structures etc
-void            *tRoot;
+extern void            *tRoot;
 int             tCompare(const void *, const void *);
 void            tDump(const void *, const VISIT , const int);
-int             tEntries;
+extern int             tEntries;
 
 // Black/whitelisting data
-void            *lRoot;
-int             listType;
+extern void            *lRoot;
+extern int             listType;
 #define         NOLIST      0
 #define         BLACKLIST   1
 #define         WHITELIST   2
-int             listLog;            // From config file NPD6LISTLOG
+extern int             listLog;            // From config file NPD6LISTLOG
 
 // Logging - various
-int             ralog;              // From config file NPD6RALOG
+extern int             ralog;              // From config file NPD6RALOG
 
 // Error handling
-int		        pollErrorLimit;     // From config file
+extern int		        pollErrorLimit;     // From config file
 
 //*****************************************************************************
 // Prototypes
