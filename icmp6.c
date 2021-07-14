@@ -404,8 +404,9 @@ sinfulexit:
  */
 int init_sockets(void)
 {
-    int errcount = 0;
+    int errcount = 0, err;
     int loop, sock, sockicmp;
+    struct ifreq ifr;
 
     /* Raw socket for receiving NSs */
     for (loop=0; loop < interfaceCount; loop++)
@@ -428,6 +429,16 @@ int init_sockets(void)
             flog(LOG_ERR, "open_icmpv6_socket: failed.");
             errcount++;
         }
+	
+        memset(&ifr, 0, sizeof(ifr));
+        strcpy(ifr.ifr_name, interfaces[loop].nameStr);
+	err = setsockopt(sockicmp, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr));
+        if ( err < 0) 
+	{
+	   flog(LOG_ERR, "bindtodevice: failed.");
+	   errcount ++;
+	}
+
         flog(LOG_DEBUG, "open_icmpv6_socket: OK.");
         interfaces[loop].icmpSock = sockicmp;
     }

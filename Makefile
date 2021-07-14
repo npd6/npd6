@@ -24,9 +24,9 @@
 VERSION=1.1.0
 
 CC=gcc
-CFLAGS= -Wall -g -O3 
+CFLAGS= -Os -I./ 
 LDFLAGS=
-SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c
+SOURCES=main.c icmp6.c util.c ip6.c config.c expintf.c exparser.c global.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=includes.h npd6.h
 EXECUTABLE=npd6
