@@ -53,7 +53,6 @@
 #include <netinet/ip6.h>
 #include <netinet/icmp6.h>
 #include <arpa/inet.h>
-#include <sys/sysctl.h>
 #include <net/if.h>
 #include <getopt.h>
 #include <ifaddrs.h>
